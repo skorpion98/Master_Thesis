@@ -341,7 +341,7 @@ Then, the newly prepared project must be accepted by OSS-Fuzz, which is done by 
 \newline
 On the other end, a bot periodically checks for new requests and validates their content before accepting/rejecting them.
 \newline \newline \newline
-After the project has been accepted as part of the OSS-Fuzz's infrastructure, a "builder" script follows the provided instructions to build the project's fuzz targets and uploads them to a Google Cloud Service Bucket, a file-hosting service.
+Once the project has been accepted as part of the OSS-Fuzz's infrastructure, a "builder" script follows the provided instructions to build the project's fuzz targets and uploads them to a Google Cloud Service Bucket, a file-hosting service.
 \newline
 This acts as a middle point between OSS-Fuzz and ClusterFuzz, which uses the aforementioned bucket to download all the necessary elements to fuzz the project as well as upload the results achieved.
 \newline \newline \newline
@@ -409,29 +409,32 @@ Each VMs performs these operations inside Docker instances, created and provided
 
 
 
-\newpage
+\ \\
 \subsection{FuzzBench}
 The \textit{FuzzBench Project} is a free service that provides fuzzers' developers with several real-world benchmark tested at Google scale, comparing the results with other famous fuzzers (such as AFL and LibFuzzer) and allowing them to evaluate their performances thanks to daily reports for further improvements.
 \cite{ref:fuzzbench_docs}
-\ \\ \newline 
+\newline
 \begin{figure}[h]
-\makebox[\textwidth][c]{\includegraphics[width=0.55\paperwidth]{foto/fuzzbench_architecture.png}}
+\makebox[\textwidth][c]{\includegraphics[width=0.67\paperwidth]{foto/fuzzbench_architecture.png}}
 \caption{FuzzBench main architecture visualized \cite{ref:fuzzbench_docs}}
 \label{fig:fuzzbench_architecture}
 \end{figure}
 \ \\
 The process works as follows.
 \newline \newline
-Initially, a fuzer developers
-
-These reports are generated using 10 reference fuzzers against 24 real-world projects used as benchmarks, usually tested over a period of 24 hours with 20 trials each.
+Initially, a fuzzer developer integrates its product within FuzzBench using a Dockerfile, containing all the resources necessary to build targets using the fuzzer and where all benchmarks will be executed.
 \newline
-This allows developer
-
-\ \\ \newline \newline
-Explain its structure and how it works...
+Similarly to OSS-Fuzz, this process is done via "pull requests", which are automatically revisioned and accepted by bots.
 \newline \newline
-Explain the experiment tracker...
+Then, the developers may choose between two testing approaches: standard and OSS-Fuzz.
+\newline
+In the first case, the benchmark is created and defined by the developers themselves, and this requires the definition of fuzz targets, build files and Docker images that will be used to correctly build and link the fuzzer to the targets and run the tests.
+\newline
+In the latter, the developers employ a fuzz target from any OSS-Fuzz project as benchmark, allowing them to test their product on a real-world scenario.
+\newline \newline
+Finally, a report will be created highlighting the strengths and weaknesses of the fuzzer on the various benchmarks, comparing individual and overall results with other fuzzers.
+
+
 
 
 
@@ -439,19 +442,75 @@ Explain the experiment tracker...
 \chapter{Preliminary Work}
 \ \\
 \section{Understanding OSS-Fuzz projects}
-Explain what is a project in OSS-Fuzz...
+To be accepted by OSS-Fuzz, the developers create a "pull request" to the OSS-Fuzz repository, but only projects that are relevant and/or critical to the global IT infrastructure with a significant user base will be integrated.
 \newline \newline
-Explain the structure of a project and its files...
+To check if your project is eligible for OSS-Fuzz, Google provides a mathematical formula to calculate the "Open-Source Project Criticality Score" \cite{ref:score} in a range between 0 \textit{(least critical)} and 1 \textit{(most critical)}, which is the following:
+\ \\
+\begin{equation}
+    CriticalityScore = \frac{1}{\sum \alpha_i}\  \sum_i \alpha_i \ \frac{\log(1+S_i)}{\log(1+\max(S_i,T_i))}
+\end{equation}
+\ \\
+The parameters evaluated are the followings:
+\begin{itemize}
+    \item \textbf{created-since} ($\alpha_i = 1$, $T_i = 120$): months since the project was created
+    \item \textbf{updated-since} ($\alpha_i = -1$, $T_i = 120$): months since the project was last updated
+    \item \textbf{contributor-count} ($\alpha_i = 2$, $T_i = 5000$): count of commits made by distinct contributors
+    \item \textbf{org-count} ($\alpha_i = 1$, $T_i = 10$): count of distinct organizations contributing to the project
+    \item \textbf{commit-frequency} ($\alpha_i = 1$, $T_i = 1000$): average number of commits per week in the last year
+    \item \textbf{recent-releases-count} ($\alpha_i = 0.5$, $T_i = 26$): number of releases in the last year
+    \item \textbf{closed-issues-count} ($\alpha_i = 0.5$, $T_i = 5000$): number of issues closed in the last 90 days
+    \item \textbf{updated-issues-count} ($\alpha_i = 0.5$, $T_i = 5000$): number of issues updated in the last 90 days
+    \item \textbf{comment-frequency} ($\alpha_i = 1$, $T_i = 15$): average number of comments per issue in the last 90 days
+    \item \textbf{dependents-count} ($\alpha_i = 2$, $T_i = 500000$): number of project mentions in the commit messages
+\end{itemize}
+\ \\
+Only projects scoring a value $\geq 0.7$ may be eligible to be integrated in the OSS-Fuzz campaign.
+
+\newpage
+The main file structure of an OSS-Fuzz project is composed by 3 files.
 \newline \newline
-Explain the commands from /infra/helper.py...
+The \textit{project.yaml} configuration file stores project metadata needed by OSS-Fuzz to correctly provide its services, including:
+\begin{itemize}
+    \item \textbf{homepage:} url to the project's homepage
+    \item \textbf{language:} programming language used to write the project (C, C++, Go, Rust, Python, JVM languages, Swift)
+    \item \textbf{primary\_contacts:} list of email addresses that will be automatically CCed on crash reports and fuzzer statistics
+    \item \textbf{main\_repo:} path to the source code repository hosting the project
+    \item \textbf{vendor\_ccs:} \textit{optional}, list of vendors' email addresses that want access to the bug reports
+    \item \textbf{sanitizers:} \textit{optional}, list of sanitizers that are available on the project (address, undefined, memory), if not specified "address" and "undefined" will be used
+    \item \textbf{architectures:} \textit{optional}, list of architectures that can build the project (supported only x86\_64 and i386)
+    \item \textbf{fuzzing\_engines:} \textit{optional}, list of fuzzing engines available (libfuzzer, afl, honggfuzz and centipede), if not specified "libfuzzer" will be used
+    \item \textbf{help\_url:} \textit{optional}, used on reports to provide a custom guide related to bug reproduction steps
+    \item \textbf{builds\_per\_day:} \textit{optional}, number of times a project should be built per day, OSS-Fuzz allows up to 4 builds per day and builds once per day by default
+    \item \textbf{file\_github\_issue:} \textit{optional}, mirrors OSS-Fuzz bug reports on the project's GitHub repository via "Issues"
+\end{itemize}
+\ \\
+The \textit{Dockerfile} defines a container with all the dependencies and resources needed to build the project and prepare the testing environment.
+\newline
+To avoid having developers create and maintain their own customized Docker containers and create an homogeneous and standard environment, OSS-Fuzz provides several "base images" for each supported language, built on top of Ubuntu 20.04 and with the appropriate compilers and toolchains already installed.
+\newline
+After pulling the most appropriate base image, there are usually several "apt-get" and "git clone" commands related to downloading and installing all the required packages and dependencies needed to correctly build the project.
+\newline
+Finally, the build script and any other fuzzer files are pulled from the project's repository.
+\newline \newline
+The \textit{build.sh:} script, executed inside the Docker container, performs all the operations necessary to build the project and the fuzzing targets that will be tested.
+\newline
+In general, the script should build the project and the fuzz targets using the correct compiler and appropriate compiler flags.
+\newline
+To provide a more flexible and accessible build system, the Docker image provides several environment variables regarding directory locations, compilers and compiling flags, allowing developers to easily retarget scripts with little effort.
 
 
-\section{Understanding FuzzBench projects}
+
+
+\newpage
+\section{Understanding FuzzBench benchmarks}
 Explain what is a project in FuzzBench...
 \newline \newline
 Explain the structure of a project and its files...
 \newline \newline
 Explain the commands from the "gsutil" suite...
+
+
+
 
 \newpage
 \section{Sanitizers} \label{sanitizers}
@@ -532,21 +591,32 @@ Finally, UBSan adds a trivial overhead, increasing execution times by an average
 
 
 
-
-
-\newpage
-\section{Docker and build system}
-Explain how you can build a project on your own machine...
-\newline \newline
-Explain the Dockerfile to build the project's image...
-\newline \newline
-Explain the build.sh to build the harnesses...
-
 \newpage
 \section{Setting up the environment}
-Explain which plugins, apts or program where needed to setup the environment (both for OSS-Fuzz and FuzzBench, valgrind, other utilities installed like gsutil)...
+All tests were performed on two separate machines, both equipped with personal installations of Ubuntu 22.04 LTS, already run-in and used.
+\newline \newline \newline
+Regarding tools for general purpose, I used Docker, Valgrind, Python 3, gsutil and Google Chrome.
 \newline \newline
-Explain briefly the difficulties encountered during this process...
+The \textit{Docker} application was needed to run the different containers needed by OSS-Fuzz to build the projects and run the tests.
+\newline \newline
+\textit{Valgrind} \cite{ref:valgrind} is an instrumentation framework to perform memory analysis, profiling and management during the execution of a program.
+More specifically, it was used to perform memory analysis in projects built without sanitizers.
+\newline \newline
+The \textit{Python 3} language was used to create several scripts that I used to perform information scraping, reports analysis and bug deduplication.
+It is also used by OSS-Fuzz to provide some functionalities, and this will be discussed later. 
+\newline \newline
+The \textit{gsutil} suite is a command-line tool provided by Google to access resources stored on Google Cloud Service from your local machine, and it was used to analyze the FuzzBench benchmarks and download other resources.
+\newline \newline
+Finally, \textit{Google Chrome} and its "development driver" were needed during the information scraping phase of this work, discussed in section \ref{selection}.
+\newline \newline \newline
+Regarding \textit{OSS-Fuzz}, most of the work was done on its GitHub repository, which I cloned locally on both machines.
+\newline
+To provide its services, OSS-Fuzz uses several python scripts that can be invoked via command-line using appropriate arguments. These commands can be used to update the projects' files and projects' images, build the project's image and its fuzzers but also download resources like corpora. 
+\newline \newline \newline
+Regarding \textit{FuzzBench} [...]
+
+
+
 
 
 
@@ -557,11 +627,43 @@ Explain briefly the difficulties encountered during this process...
 \chapter{Methodology}
 \ \\
 \section{OSS-Fuzz}
-\subsection{Selecting the projects}
-Explain the selection process and the chosen test set...
+\subsection{Selecting the projects} \label{selection}
+At the moment of writing, the OSS-Fuzz campaign includes over 1000 projects that are actively fuzzed and tested, but it would obviously be impossible to rebuild and test all of them locally also due to the language heterogeneity of such projects.
+\newline
+For this reason, this work focused solely on projects using the C/C++ language.
+\newline
+Then, to further narrow down the analysis, I identified 5 different categories of projects using the number of sanitizers used by the developers, keeping ASan as the reference due to its popularity and efficiency.
+\newline
+Finally, I ordered each set by "highest number of bugs issued" using the OSS-Fuzz bug tracker and tested these lists top-down until I had 5 projects for each category that were building and fuzzing correctly.
+\newline \newline \newline
+First step in this process was to extract the list of all projects written in C/C++, and this was done by performing a preliminary analysis of the \textit{project.yaml} configuration file present inside each project's directory.
+\newline
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{foto/project_yaml.png}
+\caption{Example of content from a project.yaml}
+\label{fig:project_yaml}
+\end{figure}
+\ \\
+To retrieve the language used by each project, I initially wrote a simple Python script taking as input the OSS-Fuzz "project" directory.
+\newline
+Then, the script retrieved the directory list using the argument as the root and iteratively explored each project looking for the configuration file: if the file was present, it then opened the file, scanned each line looking for the "language: c" string and eventually saving the name of such projects in a list.
 \newline \newline
-Explain how the project.yaml analysis was performed...
+This yielded a total of 524 projects out of 1277 written using C/C++.
+
+
+\newpage
+Then, to categorize the projects depending on the number of sanitizers used, I extended the previous script to also look for the strings "address", "memory" and "undefined" as shown on image \ref{fig:project_yaml}.
+\newline
+To perform the assignment of each project to a specific category I used a binary logic, starting each project from a value 0 and giving each sanitizer a binary value (1, 10, 100), so that by summing those value I could easily understand which sanitizers were found in its configuration file.
 \newline \newline
+Finally, out of the previous 524 projects, the results were as follows: 238 used all sanitizers, 22 used ASan and MSan, 62 used ASan and UBSan, 46 used only ASan and 155 did not use any sanitizers.
+
+
+
+
+
+\newpage
 Explain how the bug-tracker was scraped (retrieve most bugged projects)...
 \newline \newline
 Explain how the harnesses were chosen for each project...
@@ -572,6 +674,14 @@ Explain the difficulties in obtaining 25 working projects...
 Explain how projects were built and how to retrieve the corpus....
 \newline \newline
 Explain how tests were automated and their duration...
+\newline \newline
+Explain how you can build a project on your own machine...
+\newline \newline
+Explain the Dockerfile to build the project's image...
+\newline \newline
+Explain the build.sh to build the harnesses...
+\newline \newline
+Explain the commands from /infra/helper.py...
 \subsubsection{??? Un singolo esempio di test mostrato per intero ???}
 
 \newpage
@@ -776,6 +886,16 @@ Evgeniy Stepanov and Konstantin Serebryany, "\textit{MemorySanitizer: fast detec
 \textit{Google Project Zero: Bug Disclosure Guidelines}
 \newline
 \url{https://googleprojectzero.blogspot.com/2015/02/feedback-and-data-driven-updates-to.html}
+
+\bibitem{ref:valgrind}
+\textit{Valgrind Website}
+\newline
+\url{https://valgrind.org/}
+
+\bibitem{ref:score}
+\textit{Open-Source Project Criticality Score}
+\newline
+\url{https://github.com/ossf/criticality_score}
 
 \end{thebibliography}
 
