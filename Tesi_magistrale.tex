@@ -6,17 +6,7 @@
 \usepackage{microtype}
 \usepackage{amsmath}
 \usepackage{amssymb}
-%\usepackage{chemformula}
-%\usepackage{setspace}
-%\usepackage{yfonts,color}
-%\usepackage{siunitx}
-%\usepackage{comment}
-%\usepackage{multirow}
-%\usepackage{varioref}
-%\usepackage[bottom]{footmisc}
-%\usepackage{wrapfig}
 \usepackage{float}
-%\usepackage{type1cm}
 \usepackage{titlesec}
 \usepackage{lettrine}
 \usepackage{caption}
@@ -24,7 +14,6 @@
 \usepackage{listings}
 \usepackage[toc,page]{appendix}
 \linespread{0.9}
-%\usepackage{chngcntr}
 \usepackage[nottoc, notlof, notlot]{tocbibind}
 %\onehalfspacing
 %\counterwithout{footnote}{chapter}
@@ -635,7 +624,7 @@ For this reason, this work focused solely on projects using the C/C++ language.
 Then, to further narrow down the analysis, I identified 5 different categories of projects using the number of sanitizers used by the developers, keeping ASan as the reference due to its popularity and efficiency.
 \newline
 Finally, I ordered each set by "highest number of bugs issued" using the OSS-Fuzz bug tracker and tested these lists top-down until I had 5 projects for each category that were building and fuzzing correctly.
-\newline \newline \newline
+\ \\ \newline \newline
 First step in this process was to extract the list of all projects written in C/C++, and this was done by performing a preliminary analysis of the \textit{project.yaml} configuration file present inside each project's directory.
 \newline
 \begin{figure}[h]
@@ -647,29 +636,136 @@ First step in this process was to extract the list of all projects written in C/
 \ \\
 To retrieve the language used by each project, I initially wrote a simple Python script taking as input the OSS-Fuzz "project" directory.
 \newline
-Then, the script retrieved the directory list using the argument as the root and iteratively explored each project looking for the configuration file: if the file was present, it then opened the file, scanned each line looking for the "language: c" string and eventually saving the name of such projects in a list.
+Then, the script retrieved the directory list of the argument provided and iteratively explored each project's directory looking for the aforementioned configuration file: assuming the file was found, it then opened the file and scanned each line looking for the "language: c" string, eventually saving the name of such projects in a list.
 \newline \newline
 This yielded a total of 524 projects out of 1277 written using C/C++.
 
 
 \newpage
-Then, to categorize the projects depending on the number of sanitizers used, I extended the previous script to also look for the strings "address", "memory" and "undefined" as shown on image \ref{fig:project_yaml}.
+To perform the categorization of the projects depending on the number of sanitizers used, I extended the previous script to also look for the strings "address", "memory" and "undefined", shown on image \ref{fig:project_yaml}.
 \newline
-To perform the assignment of each project to a specific category I used a binary logic, starting each project from a value 0 and giving each sanitizer a binary value (1, 10, 100), so that by summing those value I could easily understand which sanitizers were found in its configuration file.
+The assignment uses a binary logic on decimal values, starting each project from 0 and giving each sanitizer a different value (1, 10, 100), so that by summing them I could easily understand which sanitizers were found in its configuration file.
 \newline \newline
-Finally, out of the previous 524 projects, the results were as follows: 238 used all sanitizers, 22 used ASan and MSan, 62 used ASan and UBSan, 46 used only ASan and 155 did not use any sanitizers.
+Out of the previous 524 projects, the results were as follows: 238 used all sanitizers, 22 used ASan and MSan, 62 used ASan and UBSan, 46 used only ASan and 156 did not use any sanitizers.
+\ \\ \newline \newline
+The next step was retrieving the number of discovered bugs of each project, and this required a thorough analysis of the "OSS-Fuzz Issue Tracker" website. \cite{ref:ossfuzz_bugtracker}
+\newline
+\begin{figure}[h]
+\makebox[\textwidth][c]{\includegraphics[width=0.69\paperwidth]{foto/issue.png}}
+\caption{Example of bug report \cite{ref:ossfuzz_bugtracker}}
+\label{fig:issue}
+\end{figure}
+\ \\
+At the moment of writing, the issue tracker platform was changed from "Monorail" to "Google Sites", so most of the work described here may no longer work as intended.
+
+
+
+
+\newpage
+Given that Monorail APIs could only be used by projects' developers registered to OSS-Fuzz and that there weren't any files that could be used for an offline analysis, I had to perform website scraping on the individual issues to retrieve the information. 
+\newline
+To do this, I used as reference a GitHub repository written by Zhen Yu Ding called "Monorail Scraper" \cite{ref:scraper}, a tool to scrape and retrieve data from Monorail, that also included functionalities for ClusterFuzz-generated OSS-Fuzz issues.
+\newline \newline
+The tool relies on the Google Chrome web browser and their testing development tool called "ChromeDriver" \cite{ref:driver}: this is an autonomous web server implementing "W3C WebDriver" \cite{ref:driver_standard}, a standard providing a remote interface to control user-agents and a set of interfaces to perform analysis and manipulation of DOM elements.
+\newline
+Essentially, this allows the user to write scripts that, in turn, instruct the Google Chrome browser to visit a specific web page and possibly performs some interaction with it, like pushing a button, compiling a form or visiting another webpage by exploring the DOM elements.  
+\newline \newline
+In this work, I focused on the functionalities for the analysis of OSS-Fuzz reports.
+\newline
+Initially, the user provides a range of "report IDs" to retrieve.
+\newline
+Then, the tool opens a new Google Chrome instance and performs a connection to a specific link in the Monorail website, attempting the reconnection only once if the first one fails. If the resulting DOM shows a login form, it means that the requested bug is still in the disclosure window, in which case the next ID is analyzed.
+\newline
+Assuming that the requested report is publicly accessible, the DOM is scanned for key information.
+During this phase, given that the project is already few years old, I had to make some minor corrections and adjustments as some parameters collected were changed and/or missing altogether.
+\newline
+All the information collected by each report was then stored in JSON files.
+\newline
+\begin{figure}[h]
+\makebox[\textwidth][c]{\includegraphics[width=0.66\paperwidth]{foto/json.png}}
+\caption{Example of information collected from reports in JSON}
+\label{fig:report}
+\end{figure}
+\ \\
+The analysis was performed on all bugs between 2023-01-01 and 2024-06-31, for a total of 11743 collected reports.
+
+
+
+\newpage
+The second to last step was to analyze the previously obtained JSON files and make a list of the most bugged projects for each category.
+\newline
+To do this, I initially wrote a simple Python script that takes as input the JSON files and analyzes the information fields collected.
+\newline
+First, I checked the \textit{"metadata"} field for values like "WontFix", "Duplicate" or "Invalid": the first means that the developers themselves tagged that specific bug as non-relevant and will not be addressed in the future, the second refers to a report for a bug that has been already issued but triggered by a different testcase, while the last one means that the reported bug could not be reliably reproduced.
+\newline
+Then, I checked the \textit{"description"} field for manual reports, as they were not meaningful towards the final results. 
+\newline
+Assuming the report analyzed is valid and generated by ClusterFuzz, I retrieved the project name from the \textit{"oss\_fuzz\_bug\_report"} fields and used a dictionary key-value to keep track of the number of bugs reported for each project. 
+\newline
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.44]{foto/list.png}
+\caption{Extract of the 50 most bugged projects}
+\label{fig:project_yaml}
+\end{figure}
+
+\newpage
+The last step was to analyze each project individually and determine which harness produced the highest number of reports.
+\newline
+Given the previous script, I extended it to take as input also a project name, so that the parsing of the JSON file focused only on reports for that particular project, and the dictionary key-value was now used to keep track of the number of bugs produced by each fuzzing target binary.
+\ \\ \newline \newline
+All this resulted in the following projects and harnesses being tested:
+\begin{itemize}
+  \item \textbf{All Sanitizers}
+  \begin{itemize}
+    \item imagemagick (encoder\_heic\_fuzzer)
+    \item binutils (fuzz\_objdump\_safe)
+    \item libxml2 (valid)
+    \item skia (skruntimeeffect)
+    \item harfbuzz (hb-subset-fuzzer)
+  \end{itemize}
+  \item \textbf{ASan + MSan}
+  \begin{itemize}
+    \item ghostscript (gs\_device\_pdfwrite\_fuzzer)
+    \item libyang (lyd\_parse\_mem\_json)
+    \item wasmedge (wasmedge-fuzztool)
+    \item openjpeg (opj\_decompress\_fuzz\_J2K)
+    \item myanmar-tools (zawgyi\_detector\_fuzz\_target)
+  \end{itemize}
+  \item \textbf{ASan + UBSan}
+  \begin{itemize}
+    \item cairo (svg-render-fuzzer)
+    \item clamav (clamav\_dbload\_YARA\_fuzzer)
+    \item freerdp (TestFuzzCoreClient)
+    \item tarantool (luaL\_loadbuffer\_fuzzer)
+    \item vlc (vlc-demux-dec-libfuzzer)
+  \end{itemize}
+  \item \textbf{ASan only}
+  \begin{itemize}
+    \item fwupd (uswid\_fuzzer)
+    \item glslang (compile\_fuzzer)
+    \item inchi (inchi\_input\_fuzzer)
+    \item radare2 (ia\_fuzz)
+    \item zeek (zeek-ftp-fuzzer)
+  \end{itemize}
+  \item \textbf{No Sanitizers}
+  \begin{itemize}
+    \item fluent-bit (flb-it-fuzz-cmetric\_decode\_fuzz\_OSSFUZZ)
+    \item gpac (fuzz\_probe\_analyze)
+    \item libdwarf (fuzz\_debug\_str)
+    \item libredwg (llvmfuzz)
+    \item serenity (FuzzJs)
+  \end{itemize}
+\end{itemize}
+
+
+
 
 
 
 
 
 \newpage
-Explain how the bug-tracker was scraped (retrieve most bugged projects)...
-\newline \newline
-Explain how the harnesses were chosen for each project...
-\newline \newline
-Explain the difficulties in obtaining 25 working projects...
-\newline \newline
 \subsection{Testing with OSS-Fuzz}
 Explain how projects were built and how to retrieve the corpus....
 \newline \newline
@@ -896,6 +992,21 @@ Evgeniy Stepanov and Konstantin Serebryany, "\textit{MemorySanitizer: fast detec
 \textit{Open-Source Project Criticality Score}
 \newline
 \url{https://github.com/ossf/criticality_score}
+
+\bibitem{ref:scraper}
+\textit{Monorail Scraper GitHub Repository}
+\newline
+\url{https://github.com/zhenyudg/monorail-scraper}
+
+\bibitem{ref:driver}
+\textit{GoogleDriver for Google Chrome}
+\newline
+\url{https://developer.chrome.com/docs/chromedriver?hl=it}
+
+\bibitem{ref:driver_standard}
+\textit{W3C WebDriver Documentation}
+\newline
+\url{https://w3c.github.io/webdriver/}
 
 \end{thebibliography}
 
