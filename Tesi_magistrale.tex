@@ -485,7 +485,7 @@ The \textit{build.sh:} script, executed inside the Docker container, performs al
 \newline
 In general, the script should build the project and the fuzz targets using the correct compiler and appropriate compiler flags.
 \newline
-To provide a more flexible and accessible build system, the Docker image provides several environment variables regarding directory locations, compilers and compiling flags, allowing developers to easily retarget scripts with little effort.
+To provide a more flexible and accessible build system, the Docker image provides several environment variables regarding directory locations, compilers and compiling flags, allowing developers to easily re-target scripts with little effort.
 
 
 
@@ -773,16 +773,16 @@ Most of the tools used in this work are provided by the "helper.py" script, whic
 \newline \newline
 The commands used are:
 \begin{verbatim}
-$ python3 helper.py pull_images 
+    $ python3 helper.py pull_images 
 
-$ python3 helper.py build_image {project_name}
+    $ python3 helper.py build_image {project_name}
 
-$ python3 helper.py build_fuzzers {project_name}
-    --sanitizer={address(default),memory,undefined,none} 
-        --engine={libfuzzer(default),afl, honggfuzz, centipede}
+    $ python3 helper.py build_fuzzers {project_name}
+        --sanitizer={address(default),memory,undefined,none} 
+            --engine={libfuzzer(default),afl, honggfuzz, centipede}
         
-$ python3 helper.py download_corpora 
-    --project={project_name} --fuzz-target={harness_name}
+    $ python3 helper.py download_corpora 
+        --project={project_name} --fuzz-target={harness_name}
 \end{verbatim}
 \ \\
 The \verb|pull_images| argument connects to OSS-Fuzz's Google Bucket to download and update all the Docker "base images" on your local machine, which are used by all projects as the base image to create their respective testing environment.
@@ -811,8 +811,9 @@ Moreover, all projects were built using AFL as fuzzing engine, because (perché 
 The tests were performed inside each project's Docker image, created and configured using the following command:
 \begin{verbatim}
     $ docker run --rm --privileged --platform linux/amd64 
-        -v /oss-fuzz/build/out/{project_name}/:/out/  
-        -v /home/zio-saba/Scrivania/TESI/results/:/results/ 
+        -v /oss-fuzz/build/out/{project_name}/:/out/
+        -v /oss-fuzz/build/corpus/{project_name}/:/corpus/    
+        -v /home/zio-saba/Scrivania/TESI/logfiles/:/logfiles/ 
         -it  gcr.io/oss-fuzz/{project_name} /bin/bash
 \end{verbatim}
 \ \\
@@ -820,15 +821,87 @@ This is a shorter and modified version of the command invoked by the \verb|build
 \newline \newline
 The first few parameters are needed to create a privileged instance of Docker and specify the running platform on which the fuzz targets will be tested.
 \newline \newline
-The arguments starting with \verb|-v| are used to create a shared directory in the Docker container, more specifically by linking a local directory to a virtual one created inside the container. This was needed to make sure that I could access the fuzzers, built in a Docker container and then locally stored on my machine, from inside the Docker container used for the tests.
+The arguments starting with \verb|-v| are used to create a shared directory in the Docker container, which means linking a local directory to a virtual one created inside the container. This was needed to make sure that I could access the resources stored locally on my machine (i.e. fuzz targets, libraries and their corpus) from inside the Docker container used for the tests.
 \newline \newline
 The last line invokes the project image to load as well as making it interactive by spawning a \verb|/bin/bash| process.
+\newline \newline \newline \newline
+Once the Docker images has been loaded and ready to use, some final adjustments were performed to perform the tests.
+\newline \newline
+All tests performed on fuzz targets built with MSan required the sanitizer's libraries to be copied in some specific locations, using the following commands:
+\begin{verbatim}
+    $ cp -R /usr/msan/lib/* /usr/local/lib/x86_64-unknown-linux-gnu/
+    $ cp -R /usr/msan/include/* /usr/local/include
+\end{verbatim}
+\ \\
+All tests performed on fuzz targets built without sanitizers relied on Valgrind to perform binary analysis and profiling, installed using the following command:\begin{verbatim}
+    $ sudo apt install gdb valgrind
+\end{verbatim}
+\ \\
+Sometimes, the "APT" tool was not available in a specific Docker container: this is because all base images provided by OSS-Fuzz contain a minimal installation of Linux Ubuntu with only some key packages that are usually enough to compile a programs, such as compiler, assembler, text editors and standard libraries.
+\newline
+In such cases, the \verb|unminimize| command was executed, which essentially "unpacks" the container and reverts it to a standard Ubuntu image, reinstalling all the default packages as well as standard additional tools.
+
+
+
+\newpage
+When testing fuzz targets built with ASan, MSan or UBSan, I used the following command:
+\begin{verbatim}
+    $ for i in /corpus/*; do 
+        echo "TEST" $i; 
+        echo "TEST" $i >> /logfiles/PROJECT_SANITIZER-NAME.log; 
+        ./{fuzz_target} $i &>> /logfiles/PROJECT_SANITIZER-NAME.log; 
+      done
+\end{verbatim}
+\ \\
+This commands uses the shell \verb|for| construct to scan all files found in the "corpus" directory.
+\newline
+Then, it prints the name of the current testcase on the terminal, which I used for monitoring purposes.
+\newline
+Finally, it prints the name of the current testcase on a log file followed by the results of the fuzz target executed on that particular testcase.
+\newline
+\begin{figure}[h]
+\makebox[\textwidth][c]{\includegraphics[width=0.8\paperwidth]{foto/ubsan_example.png}}
+\caption{Example of integer-overflow bug reported by UBSan}
+\label{fig:ubsan_example}
+\end{figure}
+\ \\
+
+
+
+\newpage
+When testing fuzz targets built without any sanitizers, I used Valgrind to analyze and profile the binary execution, useing the following command:
+\begin{verbatim}
+    $ for i in /corpus/*; do 
+        echo "TEST" $i; 
+        valgrind --log-fd=9 9>>/logfiles/PROJECT_valgrind.log 
+            ./{fuzz_target} $i >> /logfiles/PROJECT_valgrind.log 
+            && echo -e "\n\n" >> /logfiles/PROJECT_valgrind.log; 
+      done
+\end{verbatim}
+\ \\
+Again, I used the shell \verb|for| construct to scan all files found in the "corpus" directory and print the name of the current testcase on the terminal for monitoring purposes.
+\newline
+Then, I invoked Valgrind with a custom file descriptor, which allowed me to capture \verb|STDERR| and print it in the log file.
+\newline
+Finally, it prints the result of the fuzz target executed on that particular testcase and adds some newline characters to make the log file more readable.\newline
+\begin{figure}[h]
+\makebox[\textwidth][c]{\includegraphics[width=0.65\paperwidth]{foto/valgrind_example.png}}
+\caption{Example of use-of-uninitialised-memory (UUM) bug reported by Valgrind}
+\label{fig:valgrind_example}
+\end{figure}
+\ \\
 
 
 
 
 \newpage
-When i had problems, i Didi this:
+Finally, not all projects built on their first attempt.
+\newline \newline
+In most cases, the building process failed due to missing libraries: for example, libraries like \verb|pthread| and \verb|math| were often automatically added by the sanitizers.
+\newline
+Other times, libraries were not being correctly linked and/or were missing crucial compiling flags, like \verb|-ldl| and \verb|-lz|.
+\newline \newline
+To fix these problems, I had to manually modify the source files and compile the fuzz targets from inside the Docker container, using a command similar to the one executed by \verb|compile_fuzzers|:
 \begin{verbatim}
     $ docker run --rm --privileged --platform linux/amd64 
         -e PROJECT_NAME={project_name} -e HELPER=True 
@@ -836,27 +909,23 @@ When i had problems, i Didi this:
         -e FUZZING_ENGINE=afl 
         -e SANITIZER={address,memory,undefined,none} 
         -v /oss-fuzz/build/out/{project_name}/:/out/
+        -v /oss-fuzz/build/corpus/{project_name}/:/corpus/    
         -v /oss-fuzz/build/work/{project_name}/:/work/
         -it  gcr.io/oss-fuzz/{project_name} /bin/bash
 \end{verbatim}
-
-
-
-
-
-
-\ \\ \newline \newline
-Explain how projects were built and how to retrieve the corpus....
+\ \\
+Similarly to before, the first few parameters are needed to create a privileged instance of Docker and specify the running platform on which the fuzz targets will be tested, the arguments starting with \verb|-v| are used to create a shared directory in the Docker container and the last line invokes the project image to load as well as making it interactive by spawning a \verb|/bin/bash| process.
 \newline \newline
-Explain how tests were automated and their duration...
+The novelty lies in the arguments starting with \verb|-e|, which can be used to override the environment variables provided by the Docker image.
+\newline
+These variables can be used by the source files to compile a program using the most appropriate compile flags, fuzzing engine and sanitizers, and they can be easily modified by the user when creating the Docker image to easily re-target the compilation with little to none effort.
 \newline \newline
-Explain how you can build a project on your own machine...
-\newline \newline
-Explain the Dockerfile to build the project's image...
-\newline \newline
-Explain the build.sh to build the harnesses...
-\newline \newline
-Explain the commands from /infra/helper.py...
+After loading the Docker image and modifying the source files, the command \verb|compile| invokes the execution of the "build.sh" script and starts the building process for the fuzz targets.
+
+
+
+
+\newpage
 \subsubsection{??? Un singolo esempio di test mostrato per intero ???}
 
 \newpage
