@@ -1,5 +1,20 @@
 \chapter{Results}
+\chapter{Results}
+\ \\
+To correctly analyze and categorize the bugs discovered I had to perform \textit{bug deduplication}, a technique used to remove all inputs that produced the same results, which is crucial to remove any unnecessary data from the results and make the bug analysis work less tedious for the developer.
+\newline \newline
+There are several approaches and strategies that can be applied to deduplicate bugs, and it's important to mention that there is no fool-proof methodology that perfect results on all possible scenarios.
+\newline
+Given that this work focused on OSS-Fuzz, I decided to employ the same approach used by them when generating bug reports, where they use the fields "Crash Type" and "Crash state" as the main references (Figure \ref{fig:issue}).
+\newline
+In conclusion, each bug will be defined by its error type and the last 3 stack entries from where the error occurred.
+ 
+\ \\ \newline \newline
+Briefly explain the python scripts used to retrieve the results...
 
+
+
+\ \\
 \matteo{Brief introduction to this chapter}
 
 \section{OSS-Fuzz}

@@ -40,9 +40,10 @@
 \newcommand{\mynote}[2]{\xspace\fbox{\bfseries\sffamily\scriptsize{#1}}
 	{\small$\blacktriangleright$\textsf{\scriptsize\emph{#2}}$\blacktriangleleft$}}
 \newcommand{\matteo}[1]{\mytext{magenta}{\mynote{MM}{#1}}}
+\newcommand{\ziosaba}[1]{\mytext{cyan}{\mynote{ZS}{#1}}}
 
 
-\title{Analysis of fuzz testing campaigns (temp)}
+\title{Detecting Overlooked Bugs in Autonomous Fuzzing's Campaigns (for Open-Source Projects)(temp)}
 \author{Matteo Sabatini}
 \IDnumber{1794627}
 \course{Cybersecurity}
@@ -50,7 +51,7 @@
 \submitdate{2023/2024}
 \copyyear{2024}
 \advisor{Prof. Daniele Cono D'Elia}
-\coadvisor{\tofix{Dott.} Matteo Marini}
+\coadvisor{Dott. Matteo Marini}
 \authoremail{sabatini.1794627@studenti.uniroma1.it}
 \examdate{(??)}
 \examiner{Prof. ??} \examiner{Prof. ??} \examiner{Prof. ??}  \examiner{Prof. ??}  \examiner{Prof. ??} \examiner{Prof. ??}  \examiner{Prof. ??}
@@ -76,8 +77,9 @@ non so mai che scriverci :(
 
 
 \begin{abstract}
-???
-\newline \newline
+\matteo{Don't use random newpages and newlines; let sapthesis do its things. Use double newlines (intendo il tasto invio, non il comando) instead of the command newline, or are you using it for some specific reason?}
+\ziosaba{For the "newline", I use them mainly because they give me visual clues on how much spacing I'm putting between paragraphs. I usually put a single newline for the sake of readibility, as I don't really like wall of texts, or when there is a weird spacing between words for the justification. A double newline means that the two paragraphs are connected but leave some space for the reader. A triple newline usually means that the next paragraph talks about a different topic or is not directly related to the previous one.}
+\ziosaba{For the "newpage", again it's just a visual clue to make sure that the next paragraph that I'm writing will be on the next page. I used it situations where just the first one or two lines from the next paragraph were at the bottom of the page and the remaining 99\% was on the next one, for the sake of continuity.}
 \end{abstract}
 
 
@@ -98,8 +100,6 @@ non so mai che scriverci :(
 \input{chapters/1-introductions.tex}
 
 \input{chapters/2-background.tex}
-
-\input{chapters/3-preliminary.tex}
 
 \input{chapters/4-methodology.tex}
 

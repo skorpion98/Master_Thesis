@@ -8,6 +8,37 @@
 \matteo{One interesting piece of narrative Daniele and I came up with is the following: finding bugs in OSS-Fuzz means highlighting machine-driven fuzz testing's mistakes (i.e. OSS-Fuzz is fully automated, finding overlooked bugs there means finding where machines fail, in that case). Finding bugs in FuzzBench, on the other hand, means finding bugs from older crashes (I mean, crashes from older version) that security researchers found but did not test on latest versions to see if they were still present, so humans are to blame in that case.}
 
 
+
+
+\section{Setting up the environment}
+
+\matteo{Nice, we need this info. Maybe we should shift it at the end of "methodology", or at the start of "results", see which seems better} \ziosaba{I think that putting it at the beginning of "methodology" might be better, as most of the tools introduced here will be mentioned in the next sections}
+
+All tests were performed on two separate machines, both equipped with personal installations of Ubuntu 22.04 LTS, already run-in and used.
+\newline \newline \newline
+Regarding tools for general purpose, I used Docker, Valgrind, Python 3, gsutil and Google Chrome.
+\newline \newline
+The \textit{Docker} \cite{Docker} application was needed to run the different containers needed by OSS-Fuzz to build the projects and run the tests.
+\newline \newline
+\textit{Valgrind} \cite{Valgrind_1}\cite{Valgrind_2} is an instrumentation framework to perform memory analysis, profiling and management during the execution of a program.
+More specifically, it was used to perform memory analysis in projects built without sanitizers.
+\newline \newline
+The \textit{Python 3} language was used to create several scripts that I used to perform information scraping, reports analysis and bug deduplication.
+It is also used by OSS-Fuzz to provide some functionalities, and this will be discussed later. 
+\newline \newline
+The \textit{gsutil} suite is a command-line tool provided by Google to access resources stored on Google Cloud Service from your local machine, and it was used to analyze the FuzzBench benchmarks and download other resources.
+\newline \newline
+Finally, \textit{Google Chrome} and its "development driver" were needed during the information scraping phase of this work, discussed in section \ref{selection}.
+\newline \newline \newline
+Regarding \textit{OSS-Fuzz}, most of the work was done on its GitHub repository, which I cloned locally on both machines.
+\newline
+To provide its services, OSS-Fuzz uses several python scripts that can be invoked via command-line using appropriate arguments. These commands can be used to update the projects' files and projects' images, build the project's image and its fuzzers but also download resources like corpora. 
+\newline \newline \newline
+Regarding \textit{FuzzBench} [...]
+
+
+
+\newpage
 \section{OSS-Fuzz}
 \subsection{Selecting the projects} \label{selection}
 At the moment of writing, the OSS-Fuzz campaign includes over 1000 projects that are actively fuzzed and tested, but it would obviously be impossible to rebuild and test all of them locally also due to the language heterogeneity of such projects.
@@ -22,14 +53,14 @@ First step in this process was to extract the list of all projects written in C/
 \newline
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.5]{foto/project_yaml.png}
+\includegraphics[scale=0.65]{foto/project_yaml.png}
 \caption{Example of content from a project.yaml}
 \label{fig:project_yaml}
 \end{figure}
 \ \\
 To retrieve the language used by each project, I initially wrote a simple Python script taking as input the OSS-Fuzz "project" directory.
 \newline
-Then, the script retrieved the directory list of the argument provided and iteratively explored each project's directory looking for the aforementioned configuration file: assuming the file was found, it then opened the file and scanned each line looking for the "language: c" string, eventually saving the name of such projects in a list.
+Then, the script opened the directory list of the argument provided and iteratively explored each project's directory looking for the aforementioned configuration file: assuming the file was found, it then opened the file and scanned each line looking for the "language: c" string, eventually saving the name of such projects in a list.
 \newline \newline
 This yielded a total of 524 projects out of 1277 written using C/C++.
 
