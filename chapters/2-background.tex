@@ -1,5 +1,11 @@
 \chapter{Background}
-\ \\
+
+\matteo{Use this space to introduce the chapter. "In this chapter we will provide the necessary background for this thesis. We will start by introducing how xxx works, with an in-depth analysis of its yyy component and its effects on zzz. Then, we will discuss www [...]. Finally, we will conclude by detailing the inner working of vvv [...]}
+
+\matteo{Push all this text in the Fuzz Testing section. You are introducing fuzz testing here and then you start the fuzz testing section with much information already given.}
+
+\matteo{Once you push this text below, be careful not to repeat the same concept too many times.}
+
 In the context of software development, \textit{fuzz testing} (or \textit{fuzzing}) refers to an automated software technique which focuses on providing random data to a program, with the objective of creating invalid or unexpected inputs that may potentially trigger crashes, assertions or memory leaks.
 \newline 
 This also allows developers to test their programs for so called "corner-cases", meaning situations that are hard or complex to reproduce as they should not occur when the program is being properly used, but still that could lead to unexpected and/or potential malicious behavior and thus should be properly handled. 
@@ -29,7 +35,9 @@ This thesis will focus on two campaigns maintained by Google called \textit{OSS-
 More specifically, it revolves around fuzzing some of the projects that have been implemented in these repositories using alternative approaches, trying to discover new and relevant bugs that will be then securely reported and disclosed to their developers in hope to have them fixed.
 
 \newpage
+\matteo{Don't use random newpages and newlines; let sapthesis do its things. Use double newlines (intendo il tasto invio, non il comando) instead of the command newline, or are you using it for some specific reason?}
 \section{What is Fuzz Testing}
+\matteo{I'd call this section "Fuzz Testing" and I would merge 2.2 as a paragraph of this section (or maybe a subsection, you choose).}
 As previously mentioned, \textit{fuzz testing} is a software testing technique that feeds invalid, random and unexpected data to a program with the objective of discovering inputs whose execution may lead to crashes, failing assertions and memory leaks.
 \newline \newline
 We mainly distinguish between 3 types of fuzz testing:
@@ -114,12 +122,16 @@ A \textit{dumb generation fuzzer} attempts to generate new inputs without any re
 
 
 
+\section{Sanitizers}
+\matteo{We are missing a section on sanitizers (I just added it). Introduce them, by also highlighting the differences between compiler ones (ASan, MSan, UBSan...) and binary ones (mainly Valgrind and DrMemory). All these things have been presented in papers, be sure to cite them, don't cite their sites if there are papers.}
 
+\matteo{I see you talk about sanitizers later, I would do it here; it also enables you to talk about them when talking about OSS-Fuzz and FuzzBench.}
 
 
 
 \newpage
 \section{Open-Source Software}
+\matteo{I'm not sure this section belongs here in the first place. This is a master's thesis in computer science eng., I'm pretty sure we all know what open source is. Maybe just say something when you talk about OSS-Fuzz?}
 The \textbf{Open-Source Software (OSS)} is a computer software developed in a collaborative and public manner, released under a particular license that allows other users to freely use, study, modify and distribute the software and its source code for any purpose: this allows many users to actively participate in the development of a software by proposing changes and new improvements.
 \newline \newline
 To be eligible as an open-source software, the license's distribution terms must comply with the following criteria: \cite{osd}
@@ -187,6 +199,8 @@ Few noticeable mentions (LibreOffice, VLC, Firefox, etc...) ???
 
 \newpage
 \section{Fuzzing with Google}
+\matteo{we should call this "Continuous Fuzzing" and introduce Google's role in the description.}
+\matteo{Also, consider talking about clusterfuzz first and then OSS-Fuzz and Fuzzbench (which you did not include it here, maybe you wrote this before working on fuzzbench). OSS-Fuzz and Fuzzbench rely on clusterfuzz, so it makes sense to talk about clusterfuzz, I guess.}
 The \textit{Google Open Source Project} \cite{google_oss} is a campaign started in 2004, one of the oldest open-source campaigns in the industry. 
 \newline
 It was initially meant to share Google-developed software under open licenses, with the intention of bringing free technology and information sharing to the public, but it quickly became a program dedicated to improving open-source ecosystems as a whole. 

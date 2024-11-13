@@ -1,6 +1,13 @@
 
 \chapter{Methodology}
-\ \\
+
+\matteo{We first need to explain what we are doing here. We gave lots of info about fuzzing, sanitizers etc. but we did not explain yet what we are doing and why.}
+
+\matteo{Start this intro by saying these things, say that we want to see if there are overlooked bugs in common fuzzing benchmarks; we selected these two frameworks because they are among the most used and popular ones...; we looked for information that could hide overlooked bugs and we came up with fuzzing queues (OF) and old bugs (FB).}
+
+\matteo{One interesting piece of narrative Daniele and I came up with is the following: finding bugs in OSS-Fuzz means highlighting machine-driven fuzz testing's mistakes (i.e. OSS-Fuzz is fully automated, finding overlooked bugs there means finding where machines fail, in that case). Finding bugs in FuzzBench, on the other hand, means finding bugs from older crashes (I mean, crashes from older version) that security researchers found but did not test on latest versions to see if they were still present, so humans are to blame in that case.}
+
+
 \section{OSS-Fuzz}
 \subsection{Selecting the projects} \label{selection}
 At the moment of writing, the OSS-Fuzz campaign includes over 1000 projects that are actively fuzzed and tested, but it would obviously be impossible to rebuild and test all of them locally also due to the language heterogeneity of such projects.

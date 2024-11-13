@@ -1,4 +1,4 @@
-\documentclass[binding=0.6cm]{sapthesis}%remove "english" for a thesis written in Italian
+\documentclass[binding=0.6cm, oneside]{sapthesis}%remove "english" for a thesis written in Italian
 %Bachelor's (laurea triennale) thesis : Lau
 \usepackage[english]{babel} %use this package for a thesis written in Italian
 \usepackage[utf8]{inputenx}
@@ -30,6 +30,18 @@
 			pdfkeywords={thesis, sapienza, roma, university}
 }
 
+%Defining macros for comments
+\usepackage{xcolor}
+\usepackage{xspace}
+\newcommand{\mytext}[2]{\textcolor{#1}{#2}}
+
+\newcommand{\tofix}[1]{\mytext{red}{#1}}
+
+\newcommand{\mynote}[2]{\xspace\fbox{\bfseries\sffamily\scriptsize{#1}}
+	{\small$\blacktriangleright$\textsf{\scriptsize\emph{#2}}$\blacktriangleleft$}}
+\newcommand{\matteo}[1]{\mytext{magenta}{\mynote{MM}{#1}}}
+
+
 \title{Analysis of fuzz testing campaigns (temp)}
 \author{Matteo Sabatini}
 \IDnumber{1794627}
@@ -37,8 +49,8 @@
 \courseorganizer{Facolt\`a di Ingegneria dell'informazione, informatica e statistica}
 \submitdate{2023/2024}
 \copyyear{2024}
-\advisor{(Prof. ??) Daniele Cono D'Elia}
-\coadvisor{???}
+\advisor{Prof. Daniele Cono D'Elia}
+\coadvisor{\tofix{Dott.} Matteo Marini}
 \authoremail{sabatini.1794627@studenti.uniroma1.it}
 \examdate{(??)}
 \examiner{Prof. ??} \examiner{Prof. ??} \examiner{Prof. ??}  \examiner{Prof. ??}  \examiner{Prof. ??} \examiner{Prof. ??}  \examiner{Prof. ??}

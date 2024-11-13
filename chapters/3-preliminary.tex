@@ -1,5 +1,7 @@
 \chapter{Preliminary Work}
-\ \\
+
+\matteo{I'm pretty sure you can merge this stuff in the previous chapter; move sanitizers up and move info on each fuzzing framework with its respective section}
+
 \section{Understanding OSS-Fuzz projects}
 To be accepted by OSS-Fuzz, the developers create a "pull request" to the OSS-Fuzz repository, but only projects that are relevant and/or critical to the global IT infrastructure with a significant user base will be integrated.
 \newline \newline
@@ -88,14 +90,14 @@ In this thesis, we focused on using several sanitizers developed by Google \cite
 
 \ \\
 \subsection{ASan and LSan}
-The \textit{Address Sanitizer} \cite{asan_paper} is a memory error detection tool for C/C++ that helps developers to find and fix any out-of-bounds accesses to heap, stack and global objects as well as use-after-free bugs, and its one of the most widely used and effective sanitizers.
+The \textit{Address Sanitizer} \cite{serebryany2012addresssanitizer} is a memory error detection tool for C/C++ that helps developers to find and fix any out-of-bounds accesses to heap, stack and global objects as well as use-after-free bugs, and its one of the most widely used and effective sanitizers.
 \newline \newline
 It works by using a shadow memory to map the memory regions allocated by the application and record whether each byte of such areas can be safely accessed by load/store operations. Each memory region is assigned a shadow counterpart, containing metadata about its size and the offset range that can be used to safely access it, while any attempt to read/write beyond such boundaries will trigger a sanitizer error, as shown by the figure below:
 \newline
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.4]{foto/shadow_memory.png}
-\caption{Memory mapping of ASan \cite{asan_paper}}
+\caption{Memory mapping of ASan \cite{serebryany2012addresssanitizer}}
 \label{fig:asan_shadow}
 \end{figure}
 \newline
@@ -110,7 +112,7 @@ Another component is the \textit{Leak Sanitizer} (or \textit{LSan}), a memory le
 
 \ \\
 \subsection{MSan}
-The \textit{Memory Sanitizer} \cite{msan_paper} is a memory reads detector for C/C++ that helps developers to find and fix use-of-uninitialized-memory (UUM) bugs.
+The \textit{Memory Sanitizer} \cite{stepanov2015memorysanitizer} is a memory reads detector for C/C++ that helps developers to find and fix use-of-uninitialized-memory (UUM) bugs.
 The C and C++ languages usually create uninitialized stack and heap objects (unless \verb|calloc| is invoked), and discovering these bugs can be quite tricky as they do not necessarily occur in every execution and could be triggered by any operation performed by the program.
 \newline \newline
 It works by using a shadow memory to map each bit of application memory and encode its state (0 initialized, 1 otherwise): all newly allocated memory is poisoned, i.e. the corresponding shadow memory is initialized to \verb|0xFF|, and "shadow propagation" operations are performed to safely copy an uninitialized variable between memory regions as well as simple logic and arithmetic operations without occurring in errors.
@@ -120,7 +122,7 @@ Performing a load operation from uninitialized memory returns an \textit{undefin
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.63]{foto/shadow_memory_2.png}
-\caption{Memory mapping of MSan \cite{msan_paper}}
+\caption{Memory mapping of MSan \cite{stepanov2015memorysanitizer}}
 \label{fig:msan_shadow}
 \end{figure}
 \newline
@@ -152,6 +154,8 @@ Finally, UBSan adds a trivial overhead, increasing execution times by an average
 
 \newpage
 \section{Setting up the environment}
+
+\matteo{Nice, we need this info. Maybe we should shift it at the end of "methodology", or at the start of "results", see which seems better}
 All tests were performed on two separate machines, both equipped with personal installations of Ubuntu 22.04 LTS, already run-in and used.
 \newline \newline \newline
 Regarding tools for general purpose, I used Docker, Valgrind, Python 3, gsutil and Google Chrome.

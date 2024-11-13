@@ -1,63 +1,28 @@
 \chapter{Results}
-\ \\
-Explain how the results were analyzed...
-\newline \newline
-Briefly explain the python scripts used to retrieve the results...
 
+\matteo{Brief introduction to this chapter}
 
+\section{OSS-Fuzz}
 
-\newpage
-\section{OSS-Fuzz: No Sanitizers}
-Show table
-\newline \newline
-Discuss results...
+\matteo{Put here all the data, make a table with aggregated results.}
 
-\newpage
-\section{OSS-Fuzz: ASan Only}
-Show table
-\newline \newline
-Discuss results...
+\matteo{Say something about the presence of sanitizers and how many bugs we found when that sanitizer was present vs when it was not present}
 
-\newpage
-\section{OSS-Fuzz: ASan + MSan}
-Show table
-\newline \newline
-Discuss results...
+\matteo{Say something about why those bugs have been overlooked. I think we have a past mail on this; our hypothesis is that, when a sanitizer was not enabled, then trivially the fuzzer could not detect certain bugs. When that sanitizer was enabled maybe certain campaigns with one sanitizer generated a testcase that triggered a bug with another sanitizer and was also saved in the queue (e.g. it produced new coverage).}
 
-\newpage
-\section{OSS-Fuzz: ASan + UBSan}
-Show table
-\newline \newline
-Discuss results...
+\matteo{Highlight the crashes we found in gpac and in vlc; also say that we found gpac ones while they were still in private disclosure}
 
-\newpage
-\section{OSS-Fuzz: All Sanitizers}
-Show table
-\newline \newline
-Discuss results...
+\matteo{Do one or two case studies (in subsetions); I would talk about gpac, we have something to say about all the MSan bugs we found and the interaction with the CEO. The developer also wrote in their report on github that MSan bugs were giving them non-deterministic behaviors in their software. Then maybe vlc? It has 2 sanitizer and yet we found bugs for all sanitizers plus two crashes.}
 
-\newpage
-\section{Case study 1: ???}
+\matteo{Make a new subsection and talk about what can we learn about this, and how can this issue be fixed by Google.}
 
-
-\newpage
-\section{Case study 2: ???}
-
-
-\newpage
 \section{FuzzBench}
 
+\matteo{Kind of the same we did for OSS-Fuzz, let's wait for some data before drafting something, I guess.}
 
-\newpage
-\section{Case study 1: ???}
+\matteo{We can distinguish between "regular" fuzzbench and sbft? Let's see what the numbres say.}
 
-
-\newpage
-\section{Case study 2: ???}
-
-
-\newpage
-\section{About the results obtained}
+\section{Discussion}
 Discuss the overall results, what was expected and what was unexpected...
 \newline \newline
 Discuss the importance of such results, what can be inferred...
