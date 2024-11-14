@@ -1,4 +1,4 @@
-\chapter{Background}
+\chapter{Background} \label{chap_2}
 
 \matteo{Use this space to introduce the chapter. "In this chapter we will provide the necessary background for this thesis. We will start by introducing how xxx works, with an in-depth analysis of its yyy component and its effects on zzz. Then, we will discuss www [...]. Finally, we will conclude by detailing the inner working of vvv [...]}
 \ziosaba{Do I have to repeat this "chapter introduction" for all chapters?}
@@ -31,7 +31,7 @@ In September 2014, AFL discovered "Shellshock" \cite{shellshock} (also known as 
 \newline
 In April 2015, AFL discovered the famous "Heartbleed" \cite{heartbleed} bug in OpenSSL, which allowed malicious users to decipher encrypted communications from the TLS protocol. 
 \newline \newline
-This thesis will focus on two campaigns maintained by Google called \textit{OSS-Fuzz} \cite{doc-ossfuzz} and \textit{FuzzBench} \cite{{doc-fuzzbench}}: the first is a free platform that allows open-source developers to fuzz their programs autonomously relying on the computing resources provided by the Google Cloud service, while the latter allows fuzzer developers to test and improve their tools on real-word benchmarks thanks to automated tests and reports.
+This thesis will focus on two campaigns maintained by Google called \textit{OSS-Fuzz} \cite{ossfuzz_docs} and \textit{FuzzBench} \cite{{fuzzbench_docs}}: the first is a free platform that allows open-source developers to fuzz their programs autonomously relying on the computing resources provided by the Google Cloud service, while the latter allows fuzzer developers to test and improve their tools on real-word benchmarks thanks to automated tests and reports.
 More specifically, it revolves around fuzzing some of the projects that have been implemented in these repositories using alternative approaches, trying to discover new and relevant bugs that will be then securely reported and disclosed to their developers in hope to have them fixed.
 
 \newpage
@@ -69,7 +69,9 @@ Then, the fuzzer might produce one (or more) inputs that triggered different kin
     \item ensure that the bug does not occur in future fuzzing sessions by including the triggering input(s) in the set used for the tests
 \end{itemize}
 \ \\
-Finally, it's important to recall that running a fuzzing session for several days or weeks without bugs does not necessarily imply that the program is secure: this process is driven by randomness, initial inputs provided and environment used, meaning also that each fuzzing session will always result in slightly different results and coverage achieved. Yet, testing a program on all possible inputs is obviously impossible.
+Finally, it's important to recall that running a fuzzing session for several days or weeks without bugs does not necessarily imply that the program is secure: this process is driven by randomness, initial inputs provided and environment used, meaning also that each fuzzing session will always result in slightly different results and coverage achieved. 
+\newline
+Yet, testing a program on all possible inputs is obviously impossible.
 \newline
 Moreover, it easily generates false positives (trivial or benign warnings) and false negative results (incorrect or misleading results), further overloading the already tedious work of manually assessing each bug.
 
@@ -271,10 +273,10 @@ Few noticeable mentions (LibreOffice, VLC, Firefox, etc...) ???
 
 
 \newpage
-\section{Fuzzing with Google}
+\section{Continuous Fuzzing}
 \matteo{we should call this "Continuous Fuzzing" and introduce Google's role in the description.}
 \ziosaba{Google's role meaning the fact that it provides its own infrastructure for fuzzing and how it allows (virtually) any open-source project to enter this campaign?}
-\matteo{Also, consider talking about clusterfuzz first and then OSS-Fuzz and Fuzzbench (which you did not include it here, maybe you wrote this before working on fuzzbench). OSS-Fuzz and Fuzzbench rely on clusterfuzz, so it makes sense to talk about clusterfuzz, I guess.}
+
 The \textit{Google Open Source Project} \cite{google_oss} is a campaign started in 2004, one of the oldest open-source campaigns in the industry. 
 \newline
 It was initially meant to share Google-developed software under open licenses, with the intention of bringing free technology and information sharing to the public, but it quickly became a program dedicated to improving open-source ecosystems as a whole. 
@@ -320,20 +322,21 @@ Each VMs performs these operations inside Docker instances, created and provided
 
 \ \\
 \subsection{OSS-Fuzz}
-The \textit{OSS-Fuzz Project} was created in 2016 after the famous "Heartbleed" vulnerability was discovered in OpenSSl, one of the most popular open-source projects at the time for encrypting web traffic, as a response to provide developers with free fuzzing and private alerts services for their open-source projects.
+The \textit{OSS-Fuzz Project} \cite{ossfuzz_paper} was created in 2016 after the famous "Heartbleed" vulnerability was discovered in OpenSSl, one of the most popular open-source projects at the time for encrypting web traffic, as a response to provide developers with free fuzzing and private alerts services for their open-source projects.
 While it was initially intended for languages that are not memory-safe (C/C++), it is now capable to provide support for other popular languages such as Python, Go, Java and Rust.  
 \newline
 As of August 2023, it helped identify and fix over 10.000 vulnerabilities and 36.000 bugs across over 1000 projects. \cite{ossfuzz_docs}.
 \newline \newline
 Projects can be tested using several fuzzing engines (such as LibFuzzer, AFL++, Honggfuzz and Centipede) in combination with Google Sanitizers (ASan, MSan and UBSan), while \textit{ClusterFuzz} acts as the back-end and reporting tool.
-\newline \newline
+
+
+\newpage
 \begin{figure}[h]
 \makebox[\textwidth][c]{\includegraphics[width=0.65\paperwidth]{foto/oss-fuzz_architecture.png}}
 \caption{OSS-Fuzz main architecture visualized \cite{ossfuzz_docs}}
 \label{fig:ossfuzz_architecture}
 \end{figure}
-
-\newpage
+\ \\
 Initially, the maintainer of an open-source project creates one or more "fuzz targets" that will be integrated with the project's build and test systems. \cite{libfuzzer_docs}
 \newline
 A "fuzz target" is essentially a function that accepts an input, in this case an array of bytes, and perform some operations with these bytes to test a specific API.
@@ -441,7 +444,7 @@ In any case, Google reserves the right to change deadlines forwards or backwards
 
 \ \\
 \subsection{FuzzBench}
-The \textit{FuzzBench Project} is a free service that provides fuzzers' developers with several real-world benchmark tested at Google scale, comparing the results with other famous fuzzers (such as AFL and LibFuzzer) and allowing them to evaluate their performances thanks to daily reports for further improvements.
+The \textit{FuzzBench Project} \cite{fuzzbench_paper} is a free service that provides fuzzers' developers with several real-world benchmark tested at Google scale, comparing the results with other famous fuzzers (such as AFL and LibFuzzer) and allowing them to evaluate their performances thanks to daily reports for further improvements.
 \cite{fuzzbench_docs}
 \newline
 \begin{figure}[h]
