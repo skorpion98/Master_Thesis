@@ -1,7 +1,24 @@
 \chapter{Background} \label{chap_2}
 
 \matteo{Use this space to introduce the chapter. "In this chapter we will provide the necessary background for this thesis. We will start by introducing how xxx works, with an in-depth analysis of its yyy component and its effects on zzz. Then, we will discuss www [...]. Finally, we will conclude by detailing the inner working of vvv [...]}
-\ziosaba{Do I have to repeat this "chapter introduction" for all chapters?}
+\ziosaba{Do I have to repeat this "chapter introduction" for all chapters? Also, what else there is to say here?} \newline
+
+This chapter will provide all necessary background information regarding the tools employed in this thesis, their functionality, and the objects of analysis.
+\newline \newline
+We will start by introducing the concept of \textit{fuzz testing}, which has been extensively used in this work, and the results it achieved over the years. 
+\newline
+Follows an in-depth analysis of the different approaches to this technique, each one with its pros and cons, and a brief explanation of how a fuzz session works and the results it produces.
+\newline \newline
+Then, we define what is a \textit{fuzz tester} (or simply \textit{fuzzer}), along with a description of its main components and the two main categories of fuzzers.
+\newline \newline
+We later introduce the \textit{sanitizers}, tools that were crucial to improve the effectiveness of automated testing, providing a brief analysis over the different types of sanitizers available and showcasing the ones used in this work along with their pros and cons.  
+\newline \newline
+We also provide a short insight about the definition of "Open-Source Software", what it is and why it became so popular and important in the modern era, highlighting some of the most commons problems faced by open-source developers.
+\newline \newline
+Finally, we show the automated testing infrastructures analyzed in this thesis, detailing their inner working and shortcomings that will be highlighted by this work.
+\newline \newline
+\ziosaba{What else??? Maybe try to make it a little longer?}
+
 
 
 
@@ -76,8 +93,7 @@ Yet, testing a program on all possible inputs is obviously impossible.
 Moreover, it easily generates false positives (trivial or benign warnings) and false negative results (incorrect or misleading results), further overloading the already tedious work of manually assessing each bug.
 
 \ \\ \newline \newline
-\newline \newline
-Explain the main shortcomings of fuzz testing (maybe also available solution to mitigate them???)...
+\ziosaba{Explain other shortcomings of fuzz testing, maybe also available solution to mitigate them??? Not really sure what else to say}
 
 
 
@@ -122,9 +138,6 @@ A \textit{dumb generation fuzzer} attempts to generate new inputs without any re
 
 \newpage
 \section{Sanitizers} \label{sanitizers}
-\matteo{Introduce them, by also highlighting the differences between compiler ones (ASan, MSan, UBSan...) and binary ones (mainly Valgrind and DrMemory). All these things have been presented in papers, be sure to cite them, don't cite their sites if there are papers.}
-
-
 A \textit{code sanitizer} is a tool used to detect bugs in a program during both compilation and runtime, and this is done by "instrumenting" the code.
 \newline
 The act of "instrumentation" refers to modifying either the source code or binary code that is being compiled to add some additional functionalities and references that can be used by other tools to perform code analysis, logging or profiling.
@@ -135,7 +148,13 @@ Although code sanitizers should be a standard practice in the development cycle 
 \newline
 It is also extremely important to mention that these bug detection tools are not meant to be linked against production executables, as their runtime was not developed with security-sensitive constraints and may compromise the security of the released product. \cite{asan_docs}\cite{msan_docs}\cite{ubsan_docs}
 \newline \newline
-In this thesis, we focused on using several sanitizers developed by Google \cite{san_repo} as part of its tools available to open-source developers to improve their programs and make them more secure, which proved to be particularly effective when combined with fuzzing due to its ability to trigger bugs.
+We mainly distinguish between \textit{compile} and \textit{binary} sanitizers.
+\newline
+A \textit{compile sanitizer} is a tool that performs instrumentation at compile-time, meaning that it introduces functions and libraries that will be then added to the original source code, effectively altering its default behavior. This allows them not only to analyze the program during its execution, but also to provide warnings and error during the compilation process as they are capable of achieving full coverage given that the analysis is performed on the original code and includes all possible paths. Moreover, given that the compiled binary is immateriality ready to be executed, the added overhead is usually low resulting in fast execution times.
+\newline
+A \textit{binary sanitizer} is instead a dynamic binary instrumentation (DBI) framework that performs "Just-in-Time" (JIT) compilation to introduce additional instructions during the execution of a program, without altering its original source code. They often rely on dynamic binary analysis (DBA) tools to analyze programs at run-time at the level of the machine code. Its main drawback is that the analysis is dependent on the input given and the resulting execution flow, therefore they are not capable of achieving full code coverage. Finally, this analysis involves attaching another external process to instrument the original one, causing massive slowdowns.  
+\newline \newline
+This work focused on using several compile sanitizers developed by Google \cite{san_repo} as part of its tools provided to open-source developers to help them in improving their programs and making them more secure, along with the Valgrind \cite{valgrind_web} binary sanitizer. These tools proved to be particularly effective when combined with fuzzing, due to its ability to trigger bugs.
 
 
 \newpage
