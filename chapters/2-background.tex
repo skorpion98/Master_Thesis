@@ -293,8 +293,8 @@ Few noticeable mentions (LibreOffice, VLC, Firefox, etc...) ???
 
 \newpage
 \section{Continuous Fuzzing}
-\matteo{we should call this "Continuous Fuzzing" and introduce Google's role in the description.}
-\ziosaba{Google's role meaning the fact that it provides its own infrastructure for fuzzing and how it allows (virtually) any open-source project to enter this campaign?}
+\matteo{Introduce Google's role in the description.}
+\ziosaba{Google's role as in? the fact that it provides its own infrastructure for fuzzing and how it allows (virtually) any open-source project to enter this campaign?}
 
 The \textit{Google Open Source Project} \cite{google_oss} is a campaign started in 2004, one of the oldest open-source campaigns in the industry. 
 \newline
@@ -356,6 +356,8 @@ Projects can be tested using several fuzzing engines (such as LibFuzzer, AFL++, 
 \label{fig:ossfuzz_architecture}
 \end{figure}
 \ \\
+The architecture is structured as follows:
+\newline \newline
 Initially, the maintainer of an open-source project creates one or more "fuzz targets" that will be integrated with the project's build and test systems. \cite{libfuzzer_docs}
 \newline
 A "fuzz target" is essentially a function that accepts an input, in this case an array of bytes, and perform some operations with these bytes to test a specific API.
@@ -467,11 +469,13 @@ The \textit{FuzzBench Project} \cite{fuzzbench_paper} is a free service that pro
 \cite{fuzzbench_docs}
 \newline
 \begin{figure}[h]
-\makebox[\textwidth][c]{\includegraphics[width=0.65\paperwidth]{foto/fuzzbench_architecture.png}}
+\makebox[\textwidth][c]{\includegraphics[width=0.68\paperwidth]{foto/fuzzbench_architecture.png}}
 \caption{FuzzBench main architecture visualized \cite{fuzzbench_docs}}
 \label{fig:fuzzbench_architecture}
 \end{figure}
 \ \\
+The infrastructure is structured as follows.
+\newline \newline
 Initially, a fuzzer developer integrates its product within FuzzBench using a Dockerfile, containing all the resources necessary to build targets using the fuzzer and also where all benchmarks will be executed.
 \newline
 Similarly to OSS-Fuzz, this process is done via "pull requests", which are automatically revisioned and accepted by bots.
@@ -483,10 +487,3 @@ In the first case, the benchmark is created by the developers themselves, and th
 In the latter, the developers employ a fuzz target from any OSS-Fuzz project as benchmark, allowing them to test their product on a real-world scenario.
 \newline \newline
 Finally, a report will be created highlighting the strengths and weaknesses of the fuzzer on the various benchmarks, comparing individual and overall results with other integrated fuzzers.
-
-\ \\ \newline \newline \newline
-Explain what is a project in FuzzBench...
-\newline \newline
-Explain the structure of a project and its files...
-\newline \newline
-Explain the commands from the "gsutil" suite...

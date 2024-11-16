@@ -1,7 +1,7 @@
 \chapter{Results} \label{chap_4}
 \ \\
 To correctly analyze and categorize the bugs discovered you need to perform \textit{bug deduplication}, a technique used to remove all inputs that produced the same results, which is crucial to remove unnecessary data from the results and make the bug analysis work less tedious for the developer.
-\newline
+\newline \newline
 There are several strategies that can be applied to deduplicate bugs, but it's important to mention that there is no fool-proof methodology that produces perfect results on all possible scenarios, and this is because which information you are using as reference and their number will (almost always) lead to partial loss of data.
 \newline
 Given that this work focused primarily on OSS-Fuzz, I decided to employ the same approach used by them when generating bug reports, where they use the fields "Crash Type" and "Crash state" as the main references (Figure \ref{fig:issue}).
@@ -15,7 +15,7 @@ This step was also important to refine the previous deduplication step.
 Assume the situation where two inputs triggered two (apparently) different bugs because they have distinct stack flows: if the bug originated from the same function, it meant that two different execution flows triggered the same error. In this case, a common practice is to fix one of them and then use the other input as an additional check for correctness.
 \newline \newline
 Finally, all recorded bugs for a project, along with their log and fuzz targets, were reported to their respective developers.
-\newline
+\newline \newline
 At the moment of writing, unfortunately, not all developers answered and/or acknowledged the reported bugs.
 
 
@@ -63,8 +63,9 @@ serenity         & NONE                & $9,940$             & $0$              
 \hline
 \end{tabular}
 \end{adjustbox}{}
-\ \\ \newline \newline
+\ \\ \newline
 The above table shows the aggregated results for OSS-Fuzz.
+\newline \newline
 
 
 \newpage
