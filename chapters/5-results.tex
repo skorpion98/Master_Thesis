@@ -29,7 +29,7 @@ At the moment of writing, unfortunately, not all developers answered and/or ackn
 \begin{adjustbox}{width=\textwidth,center}
 \begin{tabular}{|l|l|l|l|l|l|l|l|l|}
 \hline
-\textbf{Project} & \textbf{Sanitizers} & \textbf{Queue size} & \textbf{Crashes} & \textbf{ASan} & \textbf{MSan} & \textbf{UBSan} & \textbf{Unique} & \textbf{Confirmed}  \\ 
+\textbf{Project} & \textbf{Sanitizers} & \textbf{Queue size} & \textbf{Crashes} & \textbf{ASan} & \textbf{Valgrind} & \textbf{UBSan} & \textbf{Total} & \textbf{Confirmed}  \\ 
 \hline
 binutils         & ALL                 & $20,274$            & $0$              & $0$           & $1$           & $0$            & $1$             & $1$                 \\
 harfbuzz         & ALL                 & $23,357$            & $0$              & $0$           & $1$           & $0$            & $1$             & $1$                 \\
@@ -61,29 +61,80 @@ libdwarf         & NONE                & $7,667$             & $0$              
 libredwg         & NONE                & $46,160$            & $0$              & $1$           & $3$           & $0$            & $4$             & $4$                 \\
 serenity         & NONE                & $9,940$             & $0$              & $0$           & $1$           & $1$            & $2$             & $2$                 \\
 \hline
+TOTAL BUGS   &   &   &$4$   &$6$   &$80$   &$56$   &$145$   &$103$       \\
+\hline
 \end{tabular}
 \end{adjustbox}{}
 \ \\ \newline
 The above table shows the aggregated results for OSS-Fuzz.
 \newline \newline
+First and foremost, developers have different approaches to bug reporting. 
+\newline
+The OSS-Fuzz reports were submitted during September, and there are still just under 1/3 of the discovered bugs that have yet to be acknowledged by their respective developers. Although most of them were related to use-of-uninitialized-memory and undefined behaviors, they would require little to none effort to solve them, which shows how many open-source developers either do not have enough time and resources to fix them, or they simply do not care about reports on trivial bugs that are not security relevant and postpone them (sometimes indefinitely).
+\newline \newline
+Then, we can see the effects of using sanitizers during tests.
+\newline
+While the projects that were being tested using all sanitizers produced only a total of 9 bugs, the remaining 136 were evenly distributed across the remaining categories: this is a good example of how a sanitizer is beneficial to your program but is not a replacement for programs written following good coding practices.
+\newline
+"Ghostscript" uses MSan, yet it has the highest number of memory-related bugs.
+\newline
+"Cairo" uses UBSan, yet it has the highest number of undefined-behavior bugs.
+\newline \newline
+We can also infer the popularity of each sanitizer.
+\newline
+ASan is the most popular one, reflected on the number of bugs it discovered.
+\newline
+UBSan is also among the most used ones, although the statistic shown here is biased by "Cairo": while this project is affected by many UB bugs, specifically improper conversion of data between different types, almost all previous reports found on the issue tracker related to these problems were simply marked with "Wont Fix".
+\newline
+Finally, Valgrind's memory analysis yielded the highest number, highlighting how MSan was often not used due to its reports containing too many false positives.
 
 
 \newpage
-\matteo{Put here all the data, make a table with aggregated results.}
+The reasons why this work discovered so many bugs are up for debate, as the inner workings of such infrastructures are not publicly available most likely due to security reasons, but there are some key hypothesis that can be mentioned.
+\newline \newline
+A trivial explanation lies in the developers' choices when it comes to selecting which sanitizers and fuzzing engines will be used for the tests.
+\newline
+Regarding the sanitizers, one would expect to find many bugs of a certain type when introducing a sanitizer that is not already being used by OSS-Fuzz. Moreover, each sanitizer generates different types of testcases that may produce new coverage when testing the program with another sanitizer.
+\newline
+Also fuzzing engines, similarly to sanitizers, use different approaches and strategies when testing a program: given that each fuzzer generates different new testcases and produces different coverage, using the same corpus with different fuzzers may produce substantially different results.
+\newline
+Moreover, although not shown in the previous table, less than half of the projects tested included AFL as one of its fuzzing engines used for the tests, while the others relied on the default option (libfuzzer) or a set of fuzzers where AFL was not included: it's interesting to mention that all the projects using AFL yielded (on average) less bugs that the others, which again highlights why it is considered the current state-of-the-art.
+\newline \newline
+Another reasoning may lies in the algorithms employed by ClusterFuzz regarding the management of fuzzing queues.
+\newline
+Each time a project undergoes a fuzzing session, a new set will be produced containing all the interesting input discovered during this test along with any new testcases generated by the fuzzer used, and all these inputs will later from the corpus used as input for future fuzzing sessions: to make sure that the size of this corpus does not explode over time, you need \textit{bug deduplication} and \textit{pruning} techniques.
+\newline
+We already established how ClusterFuzz performs \textit{deduplication}, specifically "error type" and the last 3 stack entries, and also mentioned that there is no general solution to this process that does not involve some degree of information loss.
+\newline
+The same can be said about \textit{pruning}, which is the process of removing all unnecessary and non-relevant inputs from a corpus. ClusterFuzz employ several \textit{"Multi-Armed Bandit (MAB)"} \cite{mab} algorithms, whose statistical explanation will be omitted for the sake of simplicity, in the following way: at the end of each fuzzing session, ClusterFuzz must decide whether to prioritize inputs that caused bugs or inputs that produced new coverage, using regress knowledge and implementation choices as reference. Given that ClusterFuzz's developers prioritize code coverage, most inputs from a fuzzing queue will contain that type of inputs, implying that pruning will most likely remove some inputs causing bugs from future fuzzing queues.
+\newline \newline
+Related to the problem of pruning, there is also the versioning problem.
+\newline
+Let's assume that it exists a specific input on the current version of the program that causes a bug. Then, the developers release a new version that introduces some changes, along with a fix for the problem, and the input is automatically removed by ClusterFuzz after a successful test as it is not relevant anymore: just because that particular input has been fixed and removed from the queue, it does not necessarily mean that particular type of error has been permanently fixed unless another input in future fuzzing queues reproduces the same problem. This is the reason why keeping old inputs that caused bugs and testing old corpora on new versions is useful, as it is not uncommon for developers to reintroduce old bugs during changes, and they might produce interesting and unexpected results.
 
-\matteo{Say something about the presence of sanitizers and how many bugs we found when that sanitizer was present vs when it was not present}
 
-\matteo{Say something about why those bugs have been overlooked. I think we have a past mail on this; our hypothesis is that, when a sanitizer was not enabled, then trivially the fuzzer could not detect certain bugs. When that sanitizer was enabled maybe certain campaigns with one sanitizer generated a testcase that triggered a bug with another sanitizer and was also saved in the queue (e.g. it produced new coverage).}
-\ziosaba{Tornando ora al problema principale, ovvero perché noi abbiamo trovato bug che non sono stati riportati automaticamente dal sistema, ho alcune idee. Un primo motivo banale, come da voi citato nella mail precedente, è la mancanza di uno specifico sanitizer nei test effettuati dal sistema: se lo sviluppatore non ha richiesto a OSS-Fuzz di testare il proprio codice con MSan perché non ha fornito binari instrumentati con tale sanitizer, è ovvio che non verranno mai trovati bug di MSan. Un secondo motivo che mi viene in mente è appunto l'utilizzo di fuzzer diversi: rianalizzando i file "project.yaml" dei 25 progetti finali (trovate le statistiche nel solito foglio Excel), poco meno della metà di questi hanno implementato AFL nei test automatizzati e questo mi ha portato ad effettuare due osservazioni.
-La prima è relativa ai progetti con AFL, che nella statistica generale hanno presentato in media un minor numero di bug nelle rispettive categorie (ad eccezione di Cairo che sembra ignorare completamente problemi relativi ad overflow e rappresentazione dei dati nei rispettivi tipi), il che ha perfettamente senso poiché ci pensa già il sistema a testarli. La seconda è invece relativa a tutti quei progetti che sono implementati con uno (o più) fuzzer ma in cui AFL non è incluso: tornando al discorso di prima, testare un programma con un fuzzer diverso da quelli già usati ma usando un corpus costruito dagli input generati da altri fuzzer che si basano su tecniche diverse, può portare ad ottenere nuovi risultati mai visti in precedenza. Una terza spiegazione riguarda invece il continuo cambiamento delle code. Come accennato sopra, tra una sessione di fuzzing e l'altra ci sono diversi algoritmi che vanno a modificarne il contenuto, e nello specifico voglio soffermarmi sui "MAB algorithms" che sono stati programmati per massimizzare il code coverage.
-Supponiamo di partire da una coda in cui è presente un testcase che non genera un bug per la build corrente: se al termine della sessione di fuzzing tale testcase viene rimosso dalla coda, in una build successiva questo potrebbe invece portare ad un bug che però non sarà mai riportato se la coda utilizzata nella successiva sessione non contiene un altro input che porta allo stesso risultato. Pertanto, utilizzare una coda vecchia di diversi mesi su un progetto aggiornato potrebbe portare a risultati inaspettati. Ultimo motivo a cui avevo pensato è invece relativo alle scelte progettuali di ClusterFuzz. Leggendo la documentazione, questa pagina ha catturato la mia attenzione, di cui riporto di seguito un estratto: ClusterFuzz does not consider testcases that do not reliably reproduce as important. However, if a crash state is seen very frequently despite not having a single reliable testcase for it, ClusterFuzz will file a bug for it. When ClusterFuzz finds a reliably reproducible testcase for the same crash state, it creates a new report and deletes the older report with the unreliable testcase. Durante la scrittura dei report, ci sono state diverse occasioni in cui i bug trovati non erano consistenti, ovvero appunto crash o sanitizer-errors che non si presentavano ad ogni esecuzione del codice.
-Sapendo quanto citato sopra, non mi meraviglia che tali bug non siano stati catturati e reportati dal sistema: infatti, in tali report abbiamo tenuto a precisare che il bug non si presentava ad ogni esecuzione del codice eo che produceva risultati diversi a seconda che il binario fosse compilato con o senza}
+\newpage
+Finally, we mention how ClusterFuzz handles bugs that cannot be reliably reproduced \cite{unreliable}: 
+\newline \newline
+\textit{"ClusterFuzz does not consider testcases that do not reliably reproduce as important. However, if a crash state is seen very frequently despite not having a single reliable testcase for it, ClusterFuzz will file a bug for it. When ClusterFuzz finds a reliably reproducible testcase for the same crash state, it creates a new report and deletes the older report with the unreliable testcase."}
+\newline \newline
+During this analysis, there were few inputs that did not produce a bug consistently, something that was obviously mentioned in the reports containing them. Given that it is unknown how many times a crash must be "seen" by ClusterFuzz before a generic bug report for it is produced, it's possible that the reports generated during this work may be related to bugs already known by ClusterFuzz but that were not appearing enough times to be considered relevant.
 
+
+\subsection{Case study: GPAC}
+\subsection{Case study: VLC}
+
+
+\newpage
 \matteo{Highlight the crashes we found in gpac and in vlc; also say that we found gpac ones while they were still in private disclosure}
+\ziosaba{I think that introducing this topic when talking about the projects in their respective subsection is better? Don't know exactly how to tackle them here in few meaningful lines}
 
 \matteo{Do one or two case studies (in subsetions); I would talk about gpac, we have something to say about all the MSan bugs we found and the interaction with the CEO. The developer also wrote in their report on github that MSan bugs were giving them non-deterministic behaviors in their software. Then maybe vlc? It has 2 sanitizer and yet we found bugs for all sanitizers plus two crashes.}
 
 \matteo{Make a new subsection and talk about what can we learn about this, and how can this issue be fixed by Google.}
+\ziosaba{Why not moving this topic in the "Discussion" section?}
+
+
 
 
 
@@ -95,6 +146,7 @@ Sapendo quanto citato sopra, non mi meraviglia che tali bug non siano stati catt
 
 \matteo{We can distinguish between "regular" fuzzbench and sbft? Let's see what the numbres say.}
 
+\subsection{Case study: ???}
 
 \newpage
 \section{Developers' responses}

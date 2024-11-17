@@ -34,10 +34,10 @@ All tests were performed on two separate machines, both equipped with personal i
 \newline \newline \newline
 Regarding tools for general purpose, I used Docker, Valgrind, Python 3, gsutil and Google Chrome.
 \newline \newline
-The \textit{Docker} \cite{Docker} application was needed to run the different containers needed by OSS-Fuzz to build the projects and run the tests.
+The \textit{Docker} \cite{Docker} application run the different containers needed by OSS-Fuzz to build the environment where projects will be built and tested.
 \newline \newline
-\textit{Valgrind} \cite{Valgrind_1}\cite{Valgrind_2} is a dynamic binary instrumentation (DBI) framework to perform memory analysis, profiling and management during the execution of a program.
-More specifically, it was used to perform memory analysis in projects built without sanitizers.
+\textit{Valgrind} \cite{Valgrind_1}\cite{Valgrind_2} is a dynamic binary instrumentation (DBI) framework to perform analysis, profiling and management of a program during its execution.
+More specifically, it was used to perform memory analysis when projects were built without sanitizers.
 \newline \newline
 The \textit{Python 3} language was used to create several scripts that I used to perform information scraping, reports analysis and bug deduplication.
 It is also used by OSS-Fuzz to provide some functionalities, and this will be discussed later. 
@@ -231,17 +231,17 @@ The \verb|pull_images| argument connects to OSS-Fuzz's Google Bucket to download
 \newline \newline
 The \verb|build_image| argument takes as input the name of a project and builds its Dockerfile, creating a new image on your local machine that will be later used to perform fuzzing. During this process, all dependencies and resources needed to correctly compile the fuzzers are downloaded and installed, including the main \textit{build.sh} script. It was used in conjunction with daily \verb|git pull| on the OSS-Fuzz repository, to make sure that I was always building the latest version. 
 \newline \newline
-The \verb|build_fuzzers| argument takes as input the name of a project and a list of possible sanitizers and fuzzing engines to be used during the compilation of the fuzz targets. Although this command accepts only one sanitizer and fuzzing engine at a time, it's possible to mix them by acting on some environment variables provided by the base images. Finally, this script acts as a "wrapper" for a much more complex Docker command, that creates the project's Docker image using some specific environment variables and invokes the execution of the \textit{build.sh} script.
+The \verb|build_fuzzers| argument takes as input the name of a project and a list of possible sanitizers and fuzzing engines to be used during the compilation of the fuzz targets. Although this command accepts only one sanitizer at a time, it's possible to mix them by acting on some environment variables provided by the base images. Finally, this script acts as a "wrapper" for a much more complex Docker command, that creates the project's Docker image using some specific environment variables and invokes the execution of the \textit{build.sh} script.
 \newline \newline
 The \verb|download_corpora| argument takes as input a project name and a fuzz target, it then connects to the project's Google Bucket and downloads the latest public corpus for the provided fuzz target.
 \newline \newline \newline
 After executing these commands, three new directories are created.
 \newline
-The "out" directory contains the project's directory where all the built files are saved, including libraries, fuzz targets and other files created by the selected fuzzer.
+The \verb|out| directory contained the project's directory where all built files were saved, including libraries, fuzz targets and other files created by the selected fuzzer.
 \newline
-The "work" directory acts as a temporary location to store intermediate files during the building process, it may also we used to store the fuzzing session results.
+The \verb|work| directory acted as a temporary location to store intermediate files during the building process and the fuzzing sessions.
 \newline
-The "corpus" directory contains the downloaded corpora stored as zip files.
+The \verb|corpus| directory contained the downloaded corpora stored as zip files.
 
 
 
@@ -279,7 +279,7 @@ All tests performed on fuzz targets built without sanitizers relied on Valgrind 
     $ sudo apt install gdb valgrind
 \end{verbatim}
 \ \\
-Sometimes, the "APT" tool was not available in a specific Docker container: this is because all base images provided by OSS-Fuzz contain a minimal installation of Linux Ubuntu with only some key packages that are usually enough to compile a programs, such as compiler, assembler, text editors and standard libraries.
+Sometimes, the \verb|apt| tool was not available in a specific Docker container: this is because all base images provided by OSS-Fuzz contain a minimal installation of Linux Ubuntu with only some key packages that are usually enough to compile a programs, such as compiler, assembler, text editors and standard libraries.
 \newline
 In such cases, the \verb|unminimize| command was executed, which essentially "unpacks" the container and reverts it to a standard Ubuntu image, reinstalling all the default packages as well as standard additional tools.
 
@@ -299,7 +299,7 @@ This commands uses the shell \verb|for| construct to scan all files found in the
 \newline
 Then, it prints the name of the current testcase on the terminal, which I used for monitoring purposes.
 \newline
-Finally, it prints the name of the current testcase on a log file followed by the results of the fuzz target executed on that particular testcase.
+Finally, it prints the name of the current testcase and the results of the fuzz target executed on that particular testcase on a log file.
 \newline
 \begin{figure}[h]
 \makebox[\textwidth][c]{\includegraphics[width=0.8\paperwidth]{foto/ubsan_example.png}}
@@ -311,7 +311,7 @@ Finally, it prints the name of the current testcase on a log file followed by th
 
 
 \newpage
-When testing fuzz targets built without any sanitizers, I used Valgrind to analyze and profile the binary execution, useing the following command:
+When testing fuzz targets built without any sanitizers, I used Valgrind to analyze and profile the binary's execution, using the following command:
 \begin{verbatim}
     $ for i in /corpus/*; do 
         echo "TEST" $i; 
@@ -325,10 +325,11 @@ Again, I used the shell \verb|for| construct to scan all files found in the "cor
 \newline
 Then, I invoked Valgrind with a custom file descriptor, which allowed me to capture \verb|STDERR| and print it in the log file.
 \newline
-Finally, it prints the result of the fuzz target executed on that particular testcase and adds some newline characters to make the log file more readable.\newline
+Finally, it prints the result of the fuzz target executed on that particular testcase on a log file.
+\newline
 \begin{figure}[h]
 \makebox[\textwidth][c]{\includegraphics[width=0.65\paperwidth]{foto/valgrind_example.png}}
-\caption{Example of use-of-uninitialised-memory (UUM) bug reported by Valgrind}
+\caption{Example of use-of-uninitialized-memory (UUM) bug reported by Valgrind}
 \label{fig:valgrind_example}
 \end{figure}
 \ \\
@@ -337,7 +338,7 @@ Finally, it prints the result of the fuzz target executed on that particular tes
 
 
 \newpage
-Finally, not all projects built on their first attempt.
+However, not all projects built on their first attempt.
 \newline \newline
 In most cases, the building process failed due to missing libraries: for example, libraries like \verb|pthread| and \verb|math| were often automatically added by the sanitizers.
 \newline

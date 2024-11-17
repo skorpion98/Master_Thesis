@@ -1,19 +1,18 @@
 \chapter{Background} \label{chap_2}
-
-\matteo{Use this space to introduce the chapter. "In this chapter we will provide the necessary background for this thesis. We will start by introducing how xxx works, with an in-depth analysis of its yyy component and its effects on zzz. Then, we will discuss www [...]. Finally, we will conclude by detailing the inner working of vvv [...]}
-\ziosaba{Do I have to repeat this "chapter introduction" for all chapters? Also, what else there is to say here?} \newline
-
+\ \\
 This chapter will provide all necessary background information regarding the tools employed in this thesis, their functionality, and the objects of analysis.
 \newline \newline
-We will start by introducing the concept of \textit{fuzz testing}, which has been extensively used in this work, and the results it achieved over the years. 
+We will start by introducing the concept of \textit{fuzz testing}, which has been extensively used in this work, explaining why it gained its current popularity and the results it achieved over the years.
 \newline
-Follows an in-depth analysis of the different approaches to this technique, each one with its pros and cons, and a brief explanation of how a fuzz session works and the results it produces.
+Follows an in-depth analysis of the different approaches to this technique, each one with its pros and cons.
+\newline
+Concludes a brief explanation of what is a fuzz session, what happens during the test and the results it produces.
 \newline \newline
-Then, we define what is a \textit{fuzz tester} (or simply \textit{fuzzer}), along with a description of its main components and the two main categories of fuzzers.
+Then, we define what is a \textit{fuzz tester} (or simply \textit{fuzzer}), along with a description of its main components and the two main categories of fuzzers available.
 \newline \newline
 We later introduce the \textit{sanitizers}, tools that were crucial to improve the effectiveness of automated testing, providing a brief analysis over the different types of sanitizers available and showcasing the ones used in this work along with their pros and cons.  
 \newline \newline
-We also provide a short insight about the definition of "Open-Source Software", what it is and why it became so popular and important in the modern era, highlighting some of the most commons problems faced by open-source developers.
+We also provide a short insight about the definition of "Open-Source Software", what it is and why it became so popular and important in the modern era, discussing some of the most commons problems faced by open-source developers.
 \newline \newline
 Finally, we show the automated testing infrastructures analyzed in this thesis, detailing their inner working and shortcomings that will be highlighted by this work.
 \newline \newline
@@ -49,7 +48,7 @@ In September 2014, AFL discovered "Shellshock" \cite{shellshock} (also known as 
 In April 2015, AFL discovered the famous "Heartbleed" \cite{heartbleed} bug in OpenSSL, which allowed malicious users to decipher encrypted communications from the TLS protocol. 
 \newline \newline
 This thesis will focus on two campaigns maintained by Google called \textit{OSS-Fuzz} \cite{ossfuzz_docs} and \textit{FuzzBench} \cite{{fuzzbench_docs}}: the first is a free platform that allows open-source developers to fuzz their programs autonomously relying on the computing resources provided by the Google Cloud service, while the latter allows fuzzer developers to test and improve their tools on real-word benchmarks thanks to automated tests and reports.
-More specifically, it revolves around fuzzing some of the projects that have been implemented in these repositories using alternative approaches, trying to discover new and relevant bugs that will be then securely reported and disclosed to their developers in hope to have them fixed.
+More specifically, it revolves around fuzzing some of the projects that have been implemented in these repositories using alternative approaches, trying to discover bugs that will be then securely reported and disclosed to their developers in hope to have them fixed.
 
 \newpage
 We mainly distinguish between 3 types of fuzz testing:
@@ -182,7 +181,7 @@ Another component is the \textit{Leak Sanitizer} (or \textit{LSan}), a memory le
 \newpage
 \subsection{MSan}
 The \textit{Memory Sanitizer} \cite{stepanov2015memorysanitizer} is a memory reads detector for C/C++ that helps developers to find and fix use-of-uninitialized-memory (UUM) bugs.
-The C and C++ languages usually create uninitialized stack and heap objects (unless \verb|calloc| is invoked), and discovering these bugs can be quite tricky as they do not necessarily occur in every execution and could be triggered by any operation performed by the program.
+These languages usually create uninitialized stack and heap objects (unless \verb|calloc| is invoked), and discovering these bugs can be quite tricky as they do not necessarily occur in every execution and could be triggered by any operation performed by the program.
 \newline \newline
 It works by using a shadow memory to map each bit of application memory and encode its state (0 initialized, 1 otherwise): all newly allocated memory is poisoned, i.e. the corresponding shadow memory is initialized to \verb|0xFF|, and "shadow propagation" operations are performed to safely copy an uninitialized variable between memory regions as well as simple logic and arithmetic operations without occurring in errors.
 \newline
@@ -190,27 +189,27 @@ Performing a load operation from uninitialized memory returns an \textit{undefin
 \newline
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.73]{foto/shadow_memory_2.png}
+\includegraphics[scale=0.68]{foto/shadow_memory_2.png}
 \caption{Memory mapping of MSan \cite{stepanov2015memorysanitizer}}
 \label{fig:msan_shadow}
 \end{figure}
 \newline
-Given that UUM bugs are notoriously hard to reproduce and debug, the "origin-tracking-mode" can be used to obtain more comprehensive stack-traces and helping the developer to understand where it should have happened, although it relies on the program's symbols to provide meaningful information.
-\newline
-If necessary, there is also an "advanced-origin-tracking-mode", printing the stack traces of all operations from the allocation of the uninitialized variable up to its load, but its usability is still discussed due to the huge amount of memory it requires.
+Given that UUM bugs are notoriously hard to reproduce and debug, the "origin-tracking-mode" can be used to obtain more comprehensive stack-traces and help the developers understand where it should have happened, but it relies on the program's symbols to provide meaningful information. There is also an "advanced-origin-tracking-mode", printing the stack traces of all operations from the allocation of the uninitialized variable up to its load, but its usability is still discussed due to the huge amount of memory it requires.
 \newline \newline
 The management of the shadow memory is done by MSan run-time library, that maps the "shadow" and (optional) "origin" areas and marks as uninitialized any new allocated regions as well as the deallocated ones. To update the shadow region, a large subset of the standard \verb|libc| functions are intercepted.
 \newline \newline
-Fixing UUM bugs is generally a quick task, like initializing the memory region using appropriate functions or simply setting all bytes to 0, but many developers avoid this sanitizer due to the huge slowdown that it introduces.
+Fixing UUM bugs generally requires initializing the memory region using appropriate functions or simply setting all bytes to 0, but many developers avoid this sanitizer due to the huge slowdown that it introduces.
 \newline
-In fact MSan adds a modest overhead, increasing execution times by an average 300\% and memory usage by 2x on short programs, values that rapidly worsen with complex programs and when "origin-tracking-mode" is enabled.
+In fact, MSan increases execution times by an average 300\% and memory usage by 2x on short programs, values that rapidly worsen with complex programs and when "origin-tracking-mode" is enabled.
+\newline \newline
+While this sanitizers was initially included in the tests, it was later replaced by Valgrind, as most projects did not correctly integrate it and produced results that were not meaningful enough towards the final results.
 
 
-\ \\
+\newpage
 \subsection{UBSan}
 The \textit{Undefined Behavior Sanitizer} \cite{ubsan_docs} is a fast undefined-behavior detector for C/C++, that helps developers to find and fix undefined-behavior (UB) bugs.
 \newline
-Common operations that may lead to undefined behaviors are: array subscription out of bounds, overflows/underflows originating from mathematical or logical operations, dereferenced, misagnlied or null pointers and conversion between data types.
+Common operations that may lead to undefined behaviors are: array subscription out of bounds, overflows/underflows originating from mathematical or logical operations, dereferenced, misaligned or null pointers and conversion between data types.
 \newline \newline
 By default, due to its simplistic nature, the tool does not print stack-traces and uses a minimal run-time library. If needed, "print-stacktrace-mode" can be enabled to obtain more comprehensive results, although it relies on the program’s symbols to provide meaningful information.
 \newline \newline
