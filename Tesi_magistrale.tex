@@ -80,7 +80,11 @@ non so mai che scriverci :(
 
 
 \begin{abstract}
-	Placeholder
+
+	In a world that relies on digital systems, security of software applications is a crucial property to protect both people and their assets. To this end, many techniques have been proposed which can detect a wide range of vulnerabilities before they could be exploited by malicious entities. The most prominent example of such techniques is \textit{Fuzz Testing}; it works by executing the software many times, with different inputs each time. The key idea behind it is that, by producing many inputs, the \textit{fuzzer} will eventually produce one that is able to trigger a bug.
+
+	Fuzzers shine in exercising many features of the target application by executing as much code as they can reach with new inputs. While reaching constantly increasing \textit{coverage}, fuzzers may miss bugs that do not cause observable behaviors at higher level. To tackle this issue, fuzzing is often used in combination with software sanitizations, a technique that will detect subtle bugs any time they are triggered.
+
 \end{abstract}
 
 
