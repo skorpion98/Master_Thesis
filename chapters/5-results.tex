@@ -134,7 +134,7 @@ Its analysis yielded a total of 27 bugs, 2 crashes and 25 memory-related bugs.
 \newline \newline
 The crashes were related to a SEGV signal sent as a consequence of the process attempting to access address \verb|0x0| (i.e. zero page), which is the first page of a computer's memory and whose access is prohibited and causes an access violation fault, shown below:
 \begin{figure}[h]
-\makebox[\textwidth][c]{\includegraphics[width=0.55\paperwidth]{Master_Thesis-main/foto/segv_gpac.png}}
+\makebox[\textwidth][c]{\includegraphics[width=0.55\paperwidth]{foto/segv_gpac.png}}
 \caption{Memory access violation reported by Valgrind \ziosaba{Worth it? Remove image?}}
 \label{fig:segv_gpac}
 \end{figure}
