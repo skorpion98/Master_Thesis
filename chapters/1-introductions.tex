@@ -5,50 +5,45 @@
 
 \matteo{Decent start}
 Nowadays, technology has permeated every aspect of the human life, allowing everything and everyone to be interconnected anywhere and at any moment. Thanks to its importance, it quickly became one of the most popular field of work in the modern age, and it is now common for organizations to employ various technologies to provide their services. Because of this, cyber-crime also became very common.
-\newline
+
 The Cybersecurity is an aspect of informatics whose role is to ensure the safety of the technologies available and the people that are using it, both in terms of software and infrastructure. In this context, software testing and security play an important role to protect systems against security issues and vulnerabilities that could be potentially exploited by malicious entities.
 
 \matteo{Maybe talk about software security in general, (briefly) mention memory corruptions and other relevant classes of bugs, how dangerous they are and why it is important to find them (you can also get some number about it).}
 
 \matteo{After that, introduce software testing, in general. Mention various techniques (e.g. static vs dynamic). Just mention at the end and we then start "context", where we dive in fuzzing.}
-\newline \newline
 Among the many approaches to software testing, \textit{fuzzing} is a very old technique invented in 1988, primarily used to automate simple tests that would have been otherwise performed by humans, that over the years gained popularity due to its ability to discover crashes and bugs in a program via extensive testing sessions. Although its concept it relatively easy, as it revolves around feeding random inputs to a program, it's effectiveness and simplicity of use allowed developers from all languages and level of knowledge to improve the security of their software.
-\newline
+
 Thanks to this technique, one of the most famous and critical bugs in history was discovered, the "Heartbleed" bug that affected OpenSSL.
-\newline \newline
+
 Since 2001, with the rise of "Open-Source Software", ensuring the security of software that was freely available and modifiable by anyone became a top priority: because the source code was freely accessible, it was only a matter of time before cyber-criminals began exploiting their vulnerabilities. Moreover, many modern paid applications often rely on such free software to provide their services. 
-\newline
+
 Given their popularity, Google announced the ClusterFuzz project in 2012, a cloud-based fuzzing infrastructure to test security-critical components of the Chromium web browser, where fuzzer developers could upload their own fuzz tool and collect bug-bounties if their product discovered a crash in the browser.
-\newline
+
 In 2016, this infrastructure was extended in a new campaign called OSS-Fuzz, allowing open-source developers to integrate their product in this ecosystem while Google provided its own infrastructure to perform continuous fuzzing of such projects.
-\newline
+
 Later, in 2021, Google announced yet a new project called FuzzBench, focused on helping the development of open-source fuzzers thanks to tests based on real-world benchmarks and daily reports.
-\newline \newline
+
 This work will focus on analyzing the campaigns previously mentioned, studying how they work and the results achieved, with the intention of highlighting not only their importance but also their shortcomings.
 
 
 
-
-\newpage
 \section{Context}
 \matteo{Some of the info in the first two paragraphs here may be useful when you talk about software security and software testing earlier.}
 One of the 7 components in the "Software Development Life Cycle" (SDLC) is \textit{Testing}, which means analyzing and checking your code to make sure that it satisfies some quality, correctness and security criteria. This also provides crucial information that can be used to further improve the development of the product.
-\newline
+
 According to the "Consortium for IT Software Quality" (CISQ), poorly tested software cost the economy $\$2.08$ trillion dollars in 2020 alone \cite{forbes}, numbers that show how security against software bugs and vulnerabilities should be handled with maximum attention, especially considering also how most organizations now rely (almost) entirely on software technologies to provide their services across the globe.
-\newline
+
 Among the many goals of software testing, one of the most important ones is \textit{finding bugs}, defects in the code causing unwanted and unexpected results, that hinder the security of the product and may lead to vulnerabilities being exploited by malicious people.
-\newline
 
 \matteo{start "context" here by talking about fuzz testing. What it is, how it works, how it started (in 1988 bla bla), how it evolved etc. Keep it general and try to deliver the general message.}
 
 \matteo{Then, talk about continuous fuzzing and (continuous) fuzzing frameworks, say what they are used for, their results (e.g. mention that oss-fuzz found >60k bugs in 8(?) years etc.) and so on. Mention that these frameworks share lots of data that can be downloaded and used independently.}
 In this context, one of the most commons approaches to finding bugs is \textit{automated testing}, that is using a tool to control the execution flow of the software being tested and analyze its results, and the automation derive from the fact that such tests usually involves repetitive tasks performed over long periods of time. This technique ensures fast and simultaneous execution of test cases with high reliability and consistency, as it its less prone to human error, the initial effort required for the initial set up is compensated by minimal maintenance requirements. Moreover, tests can be reused multiple times and integrated with different objectives in mind, including code coverage.
-\newline
+
 The technique used in this thesis is \textit{fuzzing}, an automated software technique based on repeatedly testing a software on different inputs with the intention of discovering crashes and other unwanted behaviors, especially ones that happen only when unusual conditions are met.
-\newline
+
 \matteo{Remove this next line: we are presenting the general context, we are interested in the techniques involved in this thesis, we don't care about the specific tools. }
 Specifically, all work was performed using the state-of-the-art fuzzer AFL++ \cite{AFL}.
-
 
 
 
@@ -59,13 +54,12 @@ Specifically, all work was performed using the state-of-the-art fuzzer AFL++ \ci
 
 \matteo{Briefly mention the results, e.g.: "we will show that the evaluated fuzzing frameworks are indeed missing a relevant amount of bugs and vulnerabilities; we detected them and responsibly reported them [...]"}
 
-
 This thesis revolved around analyzing and testing the effectiveness of automated testing infrastructures, more specifically the OSS-Fuzz and FuzzBench campaigns.
-\newline
+
 Given the organization running them and therefore the magnitude of such infrastructures in terms of projects tested, computing capabilities and time spent testing, one could expect these systems to accurately analyze programs and identify all possible bugs: in reality, reproducing the tests locally using the available corpora not only showed many bugs that were not being actively reported, but also that some of them shouldn't even be publicly accessible due to the extremely vulnerable errors they were causing.
-\newline
+
 This resulted in a study that focused on (re)testing some selected projects with the objective of discovering bugs, that would then be promptly reported to the respective developers hoping that this would help them make their software more secure. 
-\newline
+
 While their effectiveness and importance in software development remains undisputed, this work will show that the methodology used still managed to discover many bugs overlooked by these automatic systems, providing also some hypothesis regarding why this happened and how it could be fixed.
 
 \matteo{Tentative contributions}
@@ -79,18 +73,15 @@ To summarize, this thesis makes the following contributions:
 \end{itemize}
 
 
-
-\newpage
 \section{Outline}
 The thesis will be structured as follows.
-\newline
+
 Chapter \ref{chap_2} introduces all the necessary concepts to understand what is fuzzing and how a fuzzer works, along with notions about some tools that are widely used in this field. It also introduces the definition of "Open-Source Program" and the infrastructures used in this work to perform fuzzing.
-\newline
+
 \matteo{It shows the methodology, not "how to set up the environment"}
 Chapter \ref{chap_3} discusses all the operations related to setting up the environment for the tests, the selection of the projects and how tests were performed, including the problems faced during this process and the solutions found.
-\newline
+
 Chapter \ref{chap_4} shows the results obtained, analyzing their importance, as well as discussing the reports issued and the developers' responses.
-\newline
+
 Finally, chapter \ref{chap_5} presents some final considerations about fuzzing, how it's perceived in the current era and provides some insights and suggestions on how to improve the current infrastructure.
-\newline \newline \newline
 \ziosaba{Chapter 5 outline to revise later}
