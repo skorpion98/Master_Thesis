@@ -6,3 +6,12 @@ per i siti ed i doc vatti a cercare l'anno di quel documento se pensi che quella
 
 ricordati, per quanto possibile, di non esagerare con i dettagli implementativi ma sforzati di far trasparire i concetti principali
 quindi la metodologia, cosa stai facendo e perchè, che obbiettivo vuoi raggiungere ecc
+
+
+paragrafo 2.1
+    - cosa è il fuzzing, spiegato in modo che chiunque possa capirlo
+    - come funziona il fuzz testing, parlare di come gli input vengono costantemente mutati, numerore fuzz sessions
+    - cosa è il coverage
+    - vari tipi di fuzzer, classificazione in base alle caratteristiche
+    - bug triage
+    - dettaglio tecnico e trade-off
