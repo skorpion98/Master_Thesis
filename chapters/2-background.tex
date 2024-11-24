@@ -1,102 +1,39 @@
 \chapter{Background} \label{chap_2}
 \ \\
-
-\matteo{This part is very messy, not really in the contents but in how you present it: "we will start by", "follows", "concludes". Then you go on: "then", "we later" ,"we also", "finally".}
-
-\matteo{Consider something like this:}
-
-This chapter will provide the needed background information and techniques involved in this thesis. We will start by introducing fuzz testing, with an in-depth analysis of its different flavors. Then, we will introduce software sanitizers, highlighting its relevance in the context of fuzzing. \matteo{I still think you should drop the open source stuff} We will continue by defining what open-source software is, and why it is strictly related to modern fuzz testing. Finally, we will introduce the concept of continuous fuzzing, and we will analyze the state-of-the-art frameworks to perform it.
-\matteo{(end of what I wrote)}
-
-This chapter will provide all necessary background information regarding the tools employed in this thesis, their functionality, and the objects of analysis.
-We will start by introducing the concept of \textit{fuzz testing}, which has been extensively used in this work, explaining why it gained its current popularity and the results it achieved over the years.
-
-Follows an in-depth analysis of the different approaches to this technique, each one with its pros and cons.
-
-Concludes a brief explanation of what is a fuzz session, what happens during the test and the results it produces.
-Then, we define what is a \textit{fuzz tester} (or simply \textit{fuzzer}), along with a description of its main components and the two main categories of fuzzers available.
-We later introduce the \textit{sanitizers}, tools that were crucial to improve the effectiveness of automated testing, providing a brief analysis over the different types of sanitizers available and showcasing the ones used in this work along with their pros and cons.  
-We also provide a short insight about the definition of "Open-Source Software", what it is and why it became so popular and important in the modern era, discussing some of the most commons problems faced by open-source developers.
-Finally, we show the automated testing infrastructures analyzed in this thesis, detailing their inner working and shortcomings that will be highlighted by this work.
-\ziosaba{What else??? Maybe try to make it a little longer?}
+This chapter will provide all the necessary background information and techniques employed in this thesis.
+We will start by explaining the concept of \textit{fuzz testing}, with an in-depth analysis of how it works, the main components of a fuzzing session and the different approaches available.
+Follows an introduction on software sanitizers, highlighting their relevance in the context of fuzzing.
+Then, we provide a short definition on open-source software, the main challenges faced during its development and its connection with fuzzing in the modern era.
+Concludes a thorough description of the modern automated testing infrastructures analyzed by this work, detailing their inner working and shortcomings.
 
 
 
 \section{Fuzz Testing}
-In the context of software development, \textit{fuzz testing} (or \textit{fuzzing}) refers to an automated software technique which focuses on providing random data to a program, with the objective of creating invalid and unexpected inputs that may potentially trigger crashes, assertions or memory leaks.
+In the context of software development, \textit{fuzz testing} (or \textit{fuzzing}) refers to an automated software testing technique with the objective of triggering crashes, assertions, memory leaks and undefined behavior. This allows developers to test their programs for so called "corner-cases", meaning situations hard or complex to reproduce when the program is being properly used, that could lead to unexpected and/or unwanted behavior exploitable by malicious people and therefore should be handled properly.
 
- 
-This allows developers to test their programs for so called "corner-cases", meaning situations hard or complex to reproduce when the program is being properly used but, but that could still lead to unexpected and/or potential malicious behavior and thus should be properly handled. 
-Fuzzers can be categorized using the 3 following characteristics:
-\begin{itemize}
-    \item how new inputs are generated (\textit{generation-based} or \textit{mutation-based})
-    \item whether they are aware of the input structure (\textit{smart fuzzers}) or not (\textit{dumb fuzzers})
-    \item whether they are aware of the program structure (\textit{white-box}), partially aware (\textit{gray-box}) or not (\textit{black-box})
-\end{itemize}
-\ \\
-It's important to mention that there is a trade-off between results obtained, time spent testing and resources available.
+The main concept of fuzzing revolves around testing a program on many (seemingly) random inputs over several \textit{fuzzing sessions}, each time discovering a bit more about the structure of the program, and then use this knowledge to create new testcases that attempt to trigger previously unseen execution paths and bugs. Each session usually requires several hours or days to produce meaningful results; however, because this technique is mostly based on randomness, it also means that results may vastly differ across different sessions. For this reason, multiple fuzzing sessions are necessary before a conclusion regarding the safety of the program can be reached.
 
-Fuzzing is a resource-intensive process, putting the CPU cores under heavy load while also generating potentially enormous log files with tests run for several hours or even days, but preparing the right set of inputs that will be used to perform the tests is crucial to obtain good results.
-
-Moreover, during a fuzzing session, there will be a point in time where either the inputs generated by the fuzzer will not trigger new execution flows or no new bugs are discovered for quite some time: reaching this state does not mean that the program is finally free of other bugs, as the conditions to trigger them might simply have not happened yet, and it's obviously impossible to know when this will happen as bugs may be discovered randomly.
-Among the many results achieved thanks to this technique, two honorable mentions can be linked to the popular fuzzer \textit{American Fuzzy Lop} (also known as \textit{AFL} \cite{AFL}).
-
-In September 2014, AFL discovered "Shellshock" \cite{shellshock} (also known as "Bashdoor"), a family of security bugs affecting the Unix Bash shell that allowed malicious users to execute arbitrary commands without confirmation.
-
-In April 2015, AFL discovered the famous "Heartbleed" \cite{heartbleed} bug in OpenSSL, which allowed malicious users to decipher encrypted communications from the TLS protocol. 
-This thesis will focus on two campaigns maintained by Google called \textit{OSS-Fuzz} \cite{ossfuzz_docs} and \textit{FuzzBench} \cite{{fuzzbench_docs}}: the first is a free platform that allows open-source developers to fuzz their programs autonomously relying on the computing resources provided by the Google Cloud service, while the latter allows fuzzer developers to test and improve their tools on real-word benchmarks thanks to automated tests and reports.
-More specifically, it revolves around fuzzing some of the projects that have been implemented in these repositories using alternative approaches, trying to discover bugs that will be then securely reported and disclosed to their developers in hope to have them fixed.
-
-We mainly distinguish between 3 types of fuzz testing:
+We mainly define 3 types of fuzz testing:
 \begin{itemize}
     \item \textbf{application fuzzing:} used for UI elements (such as buttons, input fields) or command-line programs, tests may include high-frequency inputs, providing random/invalid content and inputs exceeding the expected size
     \item \textbf{protocol fuzzing:} used to test the behavior of network elements and servers when invalid messages are sent over a chosen protocol, useful to ensure that such content is not misinterpreted and potentially executed as commands
-    \item  \textbf{file format fuzzing:} used for programs that accept "structured inputs", meaning files that have a precise and standard format (like .doc, .jpg) which the fuzzer can modify with the intention of triggering unwanted behavior
+    \item  \textbf{file format fuzzing:} used for programs that accept "structured inputs", i.e. files that have a precise and standard format (like .doc, .jpg), whose structure and content are altered to trigger unwanted behavior
 \end{itemize}
-This work will focus on testing programs that accept input files to provide their services, and for this reason several corpora were used to instruct the fuzzer on the appropriate file format. This will be discussed more in depth in section \ref{fuzzers}.
-One of the main requirements in fuzz testing is to achieve a high degree of \textbf{code coverage}: this statistic measures the percentage of source code executed in a test session, therefore achieving a high value means lowering the chance of leaving parts of the program with undetected bugs. Given this, one could argue that the fuzzer should be aware of the program's structure to maximize the coverage, but given that this process requires a non-trivial overhead it comes with its own trade-offs.
-For this reason, we define 3 different approaches.
-
-The \textit{black-box testing} involves using a fuzzer that is completely unaware of the program's structure, therefore assumes the program as a simple machine that takes a random input and generates an according output. This approach is relatively fast, can be easily parallelized and has good scalability. On the other hand, it will most likely find only "surface" bugs, i.e. they do not require particular conditions to be met to be triggered.     
-
-The \textit{white-box testing} involves using a fuzzer that employs "program analysis" techniques to systematically explore and reach critical program locations through meticulously crafted inputs, allowing you to discover bugs that could be potentially hidden deep in the program, although heavily relying on this knowledge implies that bugs related to unknown aspects of the program can be easily missed. While this approach is arguably the most effective one, the time used to analyze the program as well as generating such specialized input exponentially increases with the program complexity.
-
-The \textit{gray-box testing} attempts to integrate the best aspects of both approaches: use a minimal amount of knowledge over the program's structure to achieve a sufficient degree of code coverage such that the results obtained are satisfactory. This is usually done thanks to "instrumentation", discussed in section \ref{sanitizers}.
-The previously mentioned AFL, which has been extensively used in this work, falls in this category.
-
-A fuzzing session usually yields two outputs: a set of "interesting" inputs and a list of potential bugs.
-
-Whenever a generated input results in a new execution flow, it is saved along with others "interesting inputs", which can be used in subsequent fuzzing sessions to provide the fuzzer with even more information about the structure of a good input that explores the deepest parts of the program. Then, the developer might decide to analyze and group these lists, to create a new one that does not contain duplicates and/or inputs triggering the same execution flows, which is particularly useful to ensure that the size does not explode over time.
-
-Regarding the discovering of bugs, a fuzzer has to be sensible enough to distinguish between crashing and non-crashing inputs without having full knowledge over the program tested, and "sanitizers" are used to inject assertions that make the program crash when a particular kind of failure is detected. Section \ref{sanitizers} explains this concept more thoroughly.
-
-Then, the fuzzer might produce one (or more) inputs that triggered different kind of bugs, and the developer has to perform what is called \textit{bug triage}:
-\begin{itemize}
-    \item execute each input individually and observe the output
-    \item determine which kind of error occurred and why, maybe also introducing debugging tools
-    \item fix the bug entirely, if possible, or at least patch the problem as much as possible
-    \item ensure that the bug does not occur in future fuzzing sessions by including the triggering input(s) in the set used for the tests
-\end{itemize}
-\ \\
-Finally, it's important to recall that running a fuzzing session for several days or weeks without bugs does not necessarily imply that the program is secure: this process is driven by randomness, initial inputs provided and environment used, meaning also that each fuzzing session will always result in slightly different results and coverage achieved. 
-
-Yet, testing a program on all possible inputs is obviously impossible.
-
-Moreover, it easily generates false positives (trivial or benign warnings) and false negative results (incorrect or misleading results), further overloading the already tedious work of manually assessing each bug.
-
-\ziosaba{Explain other shortcomings of fuzz testing, maybe also available solution to mitigate them??? Not really sure what else to say}
+This work focused on the third methodology.
 
 
-\section{Different types of Fuzz Testers} \label{fuzzers}
-\ziosaba{I'm not entirely sure that this section should be merged with the previous one, mainly because they talk about two distinct topics, but if you think that it's better to merge them I will fix it later}
+\subsection{What is a fuzzer}  \label{fuzzers}
+A \textit{fuzzer} is the tool necessary to perform fuzz testing, taking as inputs the program being tested and a set of testcases that will be used during the fuzzing session. It is responsible for executing the program against all the provided inputs, analyze each execution and produce new and useful testcases for future fuzzing session.
 
-A fuzzer is composed by the following key elements. \cite{afl_docs}
+A fuzzer's work is based on two main metrics: \textit{coverage} and \textit{interesting inputs}. The code coverage represents a percentage that defines how much of the source code has been executed during a single fuzzing session, therefore a high value means that most of the code has been already explored and there is a lower chance of having undetected bugs. This is usually measured by creating a "Control Flow Graph" (CFG) of the program and considering the following elements: number of edges explored, functions triggered and all possible branches for conditional statements. An \textit{interesting input} is considered to be any testcases that increases the code coverage achieved and/or triggers a bug during its execution, and it is used as reference during the generation of new testcases.
 
-\textbf{Observer.}\ \ \ Provides information observed during the execution of a program to the fuzzer. Such information may be relatively simple, like the total running time for a single test and its output, to more advanced ones, like the maximum depth of the stack in a single execution. They are usually not preserved across many execution, unless an "interesting input" is encountered, in which case they are relayed to other nodes to improve future fuzzing sessions. 
+In general, a fuzzer is composed by the following key elements. \cite{afl_docs}
+
+\textbf{Observer.}\ \ \ Provides information observed during the execution of a program to the fuzzer. Such information may be relatively simple, like the total running time for a test and its output, to more advanced ones, like the maximum depth of the stack. They are usually not preserved across many execution, unless an "interesting input" is encountered, in which case they are relayed to other nodes to improve future fuzzing sessions. 
 
 \textbf{Executor.}\ \ \ Responsible for defining how the program will be executed and the arguments passed on each run. The input for a single test is provided either by writing it in some specific memory location or passed as argument to a so called "harness function", although each fuzzer has its own implementation of this element. Given this, we briefly mention few standard functionalities that compose this element. The \textit{InProcessExecutor} runs the "harness function" and provides crash detection. The \textit{ForkServerExecutor} is responsible for spawning different child processes to fuzz. The \textit{TimeoutExecutor} wraps and installs a timeout for another running executor.
 
-\textbf{Feedback.}\ \ \ Classifies the result of a single execution and determines if the initial input is "interesting" or not, which is usually determined by retrieving information for the observers and analyzing the updated coverage map. It's also possible to define several of these elements, each one with its own objective (crashes, timeout, new execution flow discovered), and combine them in boolean expression to collect more fine-grained results.
+\textbf{Feedback.}\ \ \ Classifies the result of a single execution and determines if the initial input is "interesting" or not analyzing the information received from the observers and the updated coverage map. It's also possible to define several of these elements, each one with its own objective (crashes, timeouts, new execution flows discovered), and combine them in boolean expression to collect more fine-grained results.
 
 \textbf{Input.}\ \ \ Data taken from an external source and provided to the tested program to observe its behavior, usually in the form of bytes arrays. The first fuzzing session takes a set of inputs that is defined and provided by the developer itself, while future fuzzing session will also rely on previously discovered "interesting inputs". 
 
@@ -104,24 +41,56 @@ A fuzzer is composed by the following key elements. \cite{afl_docs}
 
 \textbf{Corpus.}\ \ \ Location where testcases are stored, usually disk or memory. An example of input corpus may be composed by several testcases with the same properties, like crashing the program under a specific situation. An example of output corpus may be composed by all the testcases that are considered "interesting".
 
-This thesis focused on using fuzzers capable of generating new structured inputs for the tested program starting from an initial \textit{seed}, specifically files with a precise format, allowing them to distinguish between a valid and an invalid example. 
+Fuzzers can be then categorized using the 3 following characteristics.
 
-However, even files that do not necessarily follow the defined structure can still be used as input for fuzzing, maybe with an even higher chance of triggering unwanted or unexpected behavior: for this reason, an effective fuzzer should be capable of generating inputs that are "valid enough" so that they are not rejected from the program's parser, and "invalid enough" to potentially trigger corner cases.
+\textbf{Input generation.}\ \ \  At the end of each fuzzing session, one of the most important operations performed by the fuzzer is the generation of new testcases, with the objective of diversifying and increasing the effectiveness of the corpora that will be used on future fuzzing sessions: more specifically, an effective fuzzer should be capable of generating inputs "valid enough" so that they are not rejected from the program's parsers, but also "invalid enough" to potentially trigger corner cases. Given this, we  distinguish between \textit{mutation-based} and \textit{generation-based} fuzzers. The \textit{mutation-based fuzzers} require an initial seed of inputs as reference, and the generation of new inputs is performed by applying "mutators" on the provided seeds: these operations range from flipping/adding/removing bits (or bytes), performing mathematical operations and sometimes even completely randomizing its content. Finally, these mutations are usually mixed forming sequences to increase randomness. The \textit{generation-based fuzzers}, instead, rely on a good source of randomness to generate new inputs from scratch, and for this reason they do not depend on the existence of a good initial corpus nor on its quality, although they require more starting time before the tests become effective.
 
-We finally define the two main types of fuzzers.
+\textbf{Input's structure awareness.}\ \ \ Another information useful to the fuzzer, although not always available, is the "input model", i.e. the correct structure that a file must have when testing programs that follow rigorous standards. However, not all of them provide this feature, and for this reason we define \textit{smart} and \textit{dumb} fuzzers.
+A \textit{smart mutation fuzzer} might leverage this knowledge to switch between different types of inputs, while a \textit{dumb mutation fuzzer} can only rely on the structure of the "interesting inputs" and apply limited random mutations, usually resulting in a much lower proportion of valid inputs being generated.
+A \textit{smart generation fuzzer} uses this information to avoid wasting resources on generating inputs that are too random to be accepted, as the \textit{dumb generation fuzzer} attempts to generate new inputs without any reference, oftentimes putting more stress on the program's parser rather than the program itself due to the overwhelmingly high number of invalid inputs generated in the first phases.
 
-The \textbf{mutational-based fuzzers} require a corpus of seed inputs as reference, and generate new inputs by applying "mutators" on the provided seeds: these operations range from flipping single bits or bytes on a given input or performing mathematical operations over them, to adding or removing said information, sometimes even completely randomizing its content. Furthermore, these mutation may be mixed-and-matched into long sequences, to generate even more new inputs.
+\textbf{Program's structure awareness.}\ \ \  Fuzzers may be accompanied by program analysis' techniques to increase the efficiency and effectiveness of the tests. A \textit{black-box fuzzer} is completely unaware of the program's structure, therefore assumes the program as a simple machine that takes a random input and generates an according output: this approach is relatively fast, can be easily parallelized and has good scalability, however it will most likely find only bugs that do not require particular conditions to be met to be triggered, also called "surface bugs". A \textit{white-box fuzzer} employs program analysis' techniques to systematically explore and reach critical program locations through meticulously crafted inputs, allowing you to discover bugs that could be potentially hidden deep in the program: while this approach is arguably the most effective one, it implies that bugs related to unknown aspects of the program can be easily missed, and the time used to analyze the program as well as generating such specialized input exponentially increases with the program's complexity.
+A \textit{gray-box fuzzer} attempts to find a balance between efficiency and effectiveness by integrating the best aspects of both approaches: using a minimal amount of knowledge over the program's structure to achieve a sufficient degree of code coverage such that the results obtained are satisfactory.
 
-A \textit{smart mutational fuzzer} might leverage its knowledge on the input model to switch between different types of inputs, although this information is not always available.
+Given all this information, this thesis focused on performing gray-box testing using the current state-of-the-art fuzzer called \textit{American Fuzzy Lop} (also known as \textit{AFL} \cite{AFL}), defined as a "dumb mutation-based fuzzer". Among the many results achieved by this tool, there are two honorable mentions.
 
-A \textit{dumb mutational fuzzer}, like AFL, employs random mutations using as reference the content of "interesting inputs", which usually results in a much lower proportion of valid inputs generated.
+In September 2014, AFL discovered "Shellshock" \cite{shellshock} (also known as "Bashdoor"), a family of security bugs affecting the Unix Bash shell that allowed malicious users to execute arbitrary commands without confirmation.
 
-The \textbf{generation-based fuzzers} generate new inputs from scratch, usually relying on a good source of randomness to perform this operation, and for this reason they do not depend on the existence of a good corpus nor its quality.
+In April 2015, AFL discovered the famous "Heartbleed" \cite{heartbleed} bug in OpenSSL, which allowed malicious users to decipher the otherwise encrypted communications used by the TLS protocol. 
 
-A \textit{smart generation fuzzer} might leverage the input model provided by the developer to generate valid new inputs, although this information may not always be available.
 
-A \textit{dumb generation fuzzer} attempts to generate new inputs without any reference, oftentimes putting more stress on the program's parser rather than the program itself, as they generate an overwhelmingly amount of invalid inputs.
 
+
+
+\subsection{Fuzzing session (or "Fuzzing session, metrics and bug triage?")}
+A \textit{fuzzing session} defines the process of testing a program using a fuzzing tool.
+Assuming the program has been properly compiled using the chosen fuzzer, the first step is to simply start the fuzzing session and let the fuzzer execute the program on many different testcases. After some time, when either the initial corpus has been exhausted (mutation-based) or the fuzzer learned what is an acceptable inputs (generation-based), it starts applying random operations to generate new testcases. 
+
+During each execution, code coverage and unexpected behaviors are tracked, so that all testcases that increases any of these statistics will be regarded as "interesting inputs" and saved in a separate queue. In this context, the fuzzer has to be sensible enough to distinguish between crashing and non-crashing inputs without having full knowledge over the program tested, and therefore \textit{sanitizers} are used to "instrument" the source code and inject assertions that make the program crash when a particular kind of failure is detected. Section \ref{sanitizers} explains this concept more thoroughly.
+
+At the end of each fuzzing session, the user is presented with three results: a collection of statistics regarding the coverage achieved and bugs found, a list of inputs that caused crashes along with some metadata (testcase ID, bug type, memory state, etc...), and a set of "interesting inputs" that can be used in future fuzzing sessions to provide the fuzzer with even more information about the structure of a good input that explored the deepest parts of the program. 
+The statistics provided may be useful to understand how effective this particular fuzzing session was with respect to the previous ones, if the initial corpus needs to be refined and whether the changes applied to the code have been fruitful or not.
+The new set of "interesting inputs" is then added to the existing initial corpus, which in turn is \textit{pruned}: this process removes any duplicates and inputs that trigger the same execution flow or bugs, which is crucial to ensure that the size of the corpus does not explode over time.
+Finally, the developer has to analyze all the inputs that caused a bug and perform \textit{bug triage}: execute each input individually to observe its output, determine which kind of error occurred and why, fix the bug entirely (if possible) or at least patch the problem, and ensure that the bug does not occur in future fuzzing sessions by including the triggering input(s) in the set used for the tests.
+
+All these steps are repeated across many different fuzzing sessions, sometimes even changing the scope of the tests to increase code coverage or stressing the program with many buggy inputs, each time making the program more secure against vulnerabilities and more robust to extraneous inputs. 
+
+
+\subsection{Pros and Cons}
+While fuzzing is a very effective and popular techniques, it's important to mention that there is a trade-off between results obtained, time spent testing and resources available.
+
+Fuzzing is a resource- and disk-intensive process, putting the CPU cores under heavy load for several hours or even days while also generating potentially enormous log files, therefore preparing the right set of inputs that will be used to perform the tests and correctly configure the fuzzer is crucial to obtain good results.
+However, this process is also driven by randomness, meaning that each fuzzing session will always yield slightly different results and coverage achieved. 
+
+Moreover, during a fuzzing session, there will be a point in time where either the inputs generated by the fuzzer will not trigger new execution flows or no new bugs are discovered for quite some time: reaching this state does not mean that the program is finally free of other bugs, as the conditions to trigger them might simply have not happened yet, and it's obviously impossible to know when this will happen as bugs may be discovered randomly. For this reason it is important to highlight that running a fuzzing session for several days or weeks without bugs does not necessarily imply that the program is secure; yet, testing a program on all possible inputs would be obviously unfeasible.
+
+Finally, as any other testing technique, it easily generates false positives (trivial or benign warnings) and false negative (incorrect or misleading) results, further overloading the already tedious work of manually assessing each bug.
+
+\ziosaba{Explain other shortcomings of fuzz testing, maybe also available solution to mitigate them??? Not really sure what else to say}
+
+
+
+\newpage
 \section{Sanitizers} \label{sanitizers}
 A \textit{code sanitizer} is a tool used to detect bugs in a program during both compilation and runtime, and this is done by "instrumenting" the code.
 
@@ -138,6 +107,10 @@ A \textit{compile sanitizer} is a tool that performs instrumentation at compile-
 A \textit{binary sanitizer} is instead a dynamic binary instrumentation (DBI) framework that performs "Just-in-Time" (JIT) compilation to introduce additional instructions during the execution of a program, without altering its original source code. They often rely on dynamic binary analysis (DBA) tools to analyze programs at run-time at the level of the machine code. Its main drawback is that the analysis is dependent on the input given and the resulting execution flow, therefore they are not capable of achieving full code coverage. Finally, this analysis involves attaching another external process to instrument the original one, causing massive slowdowns.  
 This work focused on using several compile sanitizers developed by Google \cite{san_repo} as part of its tools provided to open-source developers to help them in improving their programs and making them more secure, along with the Valgrind \cite{valgrind_web} binary sanitizer. These tools proved to be particularly effective when combined with fuzzing, due to its ability to trigger bugs.
 
+
+
+
+\newpage
 \subsection{ASan and LSan}
 The \textit{Address Sanitizer} \cite{serebryany2012addresssanitizer} is a memory error detection tool for C/C++ that helps developers to find and fix any out-of-bounds accesses to heap, stack and global objects as well as use-after-free bugs, and its one of the most widely used and effective sanitizers.
 It works by using a shadow memory to map the memory regions allocated by the application and record whether each byte of such areas can be safely accessed by load/store operations. Each memory region is assigned a shadow counterpart, containing metadata about its size and the offset range that can be used to safely access it, while any attempt to read/write beyond such boundaries will trigger a sanitizer error, as shown by the figure below:
@@ -154,6 +127,11 @@ The management of the shadow memory is done by ASan run-time library, containing
 Finally, ASan adds a slight overhead, increasing execution times by an average 170\% and memory usage by 3.4x.
 Another component is the \textit{Leak Sanitizer} (or \textit{LSan}), a memory leak detector enabled by default in ASan that returns which portions of the program are leaking memory as well as the size leaked, thanks to comprehensive and exhaustive stack traces. Although this tool may seem very helpful, it usually generate huge logs especially when having complex programs that heavily rely on external libraries, which oftentimes do not perform clean releases of the objects used.
 
+
+
+
+
+\newpage
 \subsection{MSan}
 The \textit{Memory Sanitizer} \cite{stepanov2015memorysanitizer} is a memory reads detector for C/C++ that helps developers to find and fix use-of-uninitialized-memory (UUM) bugs.
 These languages usually create uninitialized stack and heap objects (unless \verb|calloc| is invoked), and discovering these bugs can be quite tricky as they do not necessarily occur in every execution and could be triggered by any operation performed by the program.
@@ -182,6 +160,9 @@ Common operations that may lead to undefined behaviors are: array subscription o
 By default, due to its simplistic nature, the tool does not print stack-traces and uses a minimal run-time library. If needed, "print-stacktrace-mode" can be enabled to obtain more comprehensive results, although it relies on the program’s symbols to provide meaningful information.
 Finally, UBSan adds a trivial overhead, increasing execution times by an average 120\% and memory usage by 2x.
 
+
+
+\newpage
 \section{Open-Source Software}
 \matteo{I'm not sure this section belongs here in the first place. This is a master's thesis in computer science eng., I'm pretty sure we all know what open source is. Maybe just say something when you talk about OSS-Fuzz?}
 \ziosaba{TBH, I'm not sure how to tackle this section, it started as something of just few lines but later proceeded to be a lot more that I originally intended. I didn't really like how the page looked with few lines on open-source immediately followed by Google Fuzzing, but I think that some of the problems of open-source discussed at the end of this section may be linked with OSS-Fuzz scoring methodology. Maybe instead of removing it altogether I can rewrite it to be more concise in a maximum of 1 page?}
@@ -252,7 +233,7 @@ This is why having a large users base is important and one of the main advantage
 Few noticeable mentions (LibreOffice, VLC, Firefox, etc...) ???
 
 
-
+\newpage
 \section{Continuous Fuzzing}
 \matteo{Introduce Google's role in the description.}
 \ziosaba{Google's role as in? the fact that it provides its own infrastructure for fuzzing and how it allows (virtually) any open-source project to enter this campaign?}
@@ -261,6 +242,9 @@ The \textit{Google Open Source Project} \cite{google_oss} is a campaign started 
 
 It was initially meant to share Google-developed software under open licenses, with the intention of bringing free technology and information sharing to the public, but it quickly became a program dedicated to improving open-source ecosystems as a whole. 
 Thanks to this campaign, many projects became popular and gained worldwide recognition such as Android OS, TensorFlow, the Go programming language, and many more.
+
+\ziosaba{This thesis will focus on two campaigns maintained by Google called \textit{OSS-Fuzz} \cite{ossfuzz_docs} and \textit{FuzzBench} \cite{{fuzzbench_docs}}: the first is a free platform that allows open-source developers to fuzz their programs autonomously relying on the computing resources provided by the Google Cloud service, while the latter allows fuzzer developers to test and improve their tools on real-word benchmarks thanks to automated tests and reports.
+More specifically, it revolves around fuzzing some of the projects that have been implemented in these repositories using alternative approaches, trying to discover bugs that will be then securely reported and disclosed to their developers in hope to have them fixed.}
 
 \ \\
 \subsection{ClusterFuzz}
@@ -350,6 +334,7 @@ The parameters evaluated are the followings:
 Only projects scoring a value $\geq 0.7$ may be eligible to be integrated in the OSS-Fuzz campaign.
 
 
+\newpage
 Assuming your project satisfies the score requirements, developers issue a "pull request" on the OSS-Fuzz repository providing the following 3 files.
 The \textit{project.yaml} configuration file stores project metadata needed by OSS-Fuzz to correctly provide its services, and some of the most commons are:
 \begin{itemize}
