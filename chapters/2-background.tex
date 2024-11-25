@@ -163,73 +163,20 @@ Finally, UBSan adds a trivial overhead, increasing execution times by an average
 
 \newpage
 \section{Open-Source Software}
-\matteo{I'm not sure this section belongs here in the first place. This is a master's thesis in computer science eng., I'm pretty sure we all know what open source is. Maybe just say something when you talk about OSS-Fuzz?}
-\ziosaba{TBH, I'm not sure how to tackle this section, it started as something of just few lines but later proceeded to be a lot more that I originally intended. I didn't really like how the page looked with few lines on open-source immediately followed by Google Fuzzing, but I think that some of the problems of open-source discussed at the end of this section may be linked with OSS-Fuzz scoring methodology. Maybe instead of removing it altogether I can rewrite it to be more concise in a maximum of 1 page?}
-
 The \textbf{Open-Source Software (OSS)} is a computer software developed in a collaborative and public manner, released under a particular license that allows other users to freely use, study, modify and distribute the software and its source code for any purpose: this allows many users to actively participate in the development of a software by proposing changes and new improvements.
-To be eligible as an open-source software, the license's distribution terms must comply with the following criteria: \cite{osd}
-\begin{enumerate}
-    
-    \item \textbf{Free redistribution} 
- 
-    The license must not restrict anyone from selling or giving away the software as part of a suite, nor it could be used to require royalties or fees on such sales.
-    
-    \item \textbf{Source code} 
+To be eligible as an open-source software, the license's distribution terms must comply with several criteria \cite{osd}: the main concept is to let anyone easily download your program and access its the source code, allowing them also to modify and redistribute the project without additional fees as long as the original code is appropriately credited. 
 
-    The program must include its source code, provided in a form that allows other programmers to modify it, as well as a compiled version. If the source code cannot be distributed, it should be easily obtainable thanks to well-publicized means, ideally downloadable from the Internet free of charge.
-    It is not allowed to provide obfuscated source code or any partially-compiled form.
-    
-    \item \textbf{Derived works} 
+Given all this, one could argue that making all this information publicly available poses a real threat to security: history has shown us many times that, given enough time and resources, releasing the source code of a program will result in malicious users discovering bugs and vulnerabilities that could have potentially catastrophic consequences.
 
-    The license must allow for modifications and publishing of derived works, allowing them to be distributed under the same license of the original software
-    
-    \item \textbf{Integrity of the author's source code} 
+For this reason, we mention some key aspects that should be considered when approaching open-source software.
 
-    If the developers want to protect the original source code, they must allow the distribution of "patch files" to perform modification of the program at compile time. In this case, the license must explicitly allow distribution of software built from a modified source code as long as any derived works carry a different name or version number with respect to the original software. 
-    
-    \item \textbf{No discrimination against person or groups} 
+\textbf{Development.}\ \ \ Open-source software is usually released under two development branches: a "stable" version, composed by all the functionalities that have been thoroughly tested and work as intended, and a "build" version, that is slightly buggier as it includes proposed changes and new features that have yet to be refined. Releasing the "build" version early not only allows the developers to showcase their work and attract even people, but also provides them with feedback from real users that are willing to run untested versions of their software.
 
-    The license must not discriminate against any person or group of persons.
-    
-    \item \textbf{No discrimination against fields of endeavor} 
+\textbf{User interaction.}\ \ \ Providing full access to the source code means that other users might want to contribute in the program's development and help the developers in improving and refining the product: considering that each user may have different knowledge and programming skills as well as different testing environments, this allows them to test and benchmark the product on a wide range of systems, further increasing the probabilities of finding new and unknown bugs that may be specific to a single OS or architecture.
 
-    The license must not restrict anyone from using the program in a particular field of endeavor or work.
-    
-    \item \textbf{Distribution of license} 
+\textbf{Bug reporting.}\ \ \ Although any user has the rights to mention a bug, error, or mistake in the program or the documentation, it is still up to the developers to ensure the truthfulness of what has been reported and how to tackle it. For example, bugs that are not security-relevant or that may be related to QoL aspects are easily pushed back as secondary problems or simply ignored altogether. Sometimes, if the developer are kind enough to accept your request but do not have time and resources to solve it, they might ask for a proposed fix and cite the user themselves in the next patch notes as a way of thanking them.
 
-    The license's rights provided must apply for anyone that obtains the product, whether it is the original software or a redistributed version of it.
-    
-    \item \textbf{License must no be specific to a product} 
-
-    The license's rights must not depend on the program being part of a suite. If that is true, the license of such suite must follow the same rights as those granted with the original software distribution. 
-    
-    \item \textbf{License must not restrict other software} 
-
-    The license must not put restrictions of any other software that might be distributed along with the licensed software.
-    
-    \item \textbf{License must be technology-neutral} 
-
-    No license provision may be linked to a particular technology or interface style.
-\end{enumerate}
-There are some key points that should be considered during the development of open-source software.
-First, the authors must decide how the program will be developed.
-
-Usually, this software is released under two development branches: a "stable" version, composed by all the functionalities that have been thoroughly tested and work as intended, and a "build" version, that is slightly buggier as it includes proposed changes and new features that have yet to be refined.
-Releasing the "build" version early not only allows the developers to showcase their work and attract even more new users, but also provides them with feedback from real users that are willing to run untested versions of their software.
-Then, they must decide how they will interact with online users.
-
-In this sense, providing full access to the source code means that other users can submit new additions to the software, bug reports and code fixes as well as point out mistakes in the documentation, therefore helping the original developers in their works while also improving and refining the product. Moreover, given that each user may have different knowledge and programming skills as well as different testing environments, this allows to test and benchmark the product on a wide range of systems further increasing the probabilities of finding new and unknown bugs that may be specific to a single OS or architecture.
-Finally, it is important to mention that although any user has the rights to mention a bug, error, or mistake in the program, it is still up to the developers to ensure the truthfulness of what has been reported and how to tackle it.
-
-For example, bugs that are not security-relevant or that may be related to QoL aspects are easily pushed back as secondary problems or simply ignored altogether.
-Sometimes, if the developer are kind enough to accept your request but do not have time and resources to solve it, they might ask the user themselves for a proposed fix and cite them in the next patch notes as a way of thanking them.
-As will be discussed in future sections, while many reports produced in this work highlighted several security bugs that have been fixed in short times, some have been ignored due to them being not relevant at the moment of reporting or because they were declared as an incorrect building approach and/or use of the program itself.   
-Given all this, one could argue that providing complete access to the source code and allowing other people to suggest changes poses a real threat to the security of the program.
-
-History has shown us many times that, given enough time and resources, releasing the source code of a program will result in malicious users discovering bugs and vulnerabilities that could have potentially catastrophic consequences. Moreover, a malicious user might try to suggest a modification in the code that introduces a specific vulnerability or generate a bug report containing false information with attachments that might exploit a previously unknown vulnerability.
-
-This is why having a large users base is important and one of the main advantages of open-source: if many people are closely watching how the program is being developed, one of them will most likely realize that malicious modifications are being suggested and notify others of the situation.
-Few noticeable mentions (LibreOffice, VLC, Firefox, etc...) ???
+\ziosaba{I've rewritten this section to be more concise and straightforward, as I would really like to keep it}
 
 
 \newpage
@@ -276,7 +223,7 @@ The first refers to a machine that can only run the "fuzz" task as it can be shu
 The latter refers to a machine that is not expected to abruptly stop or crash, therefore is capable of running all tasks.
 Each VMs performs these operations inside Docker instances, created and provided by the developer using Dockerfiles, that are configured with all the tools and files necessary to correctly build and launch the fuzzing targets.
 
-\ \\
+
 \subsection{OSS-Fuzz}
 The \textit{OSS-Fuzz Project} \cite{ossfuzz_paper} was created in 2016 after the famous "Heartbleed" vulnerability was discovered in OpenSSl, one of the most popular open-source projects at the time for encrypting web traffic, as a response to provide developers with free fuzzing and private alerts services for their open-source projects.
 While it was initially intended for languages that are not memory-safe (C/C++), it is now capable to provide support for other popular languages such as Python, Go, Java and Rust.  
