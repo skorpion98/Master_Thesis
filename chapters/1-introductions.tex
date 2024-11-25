@@ -21,6 +21,8 @@ An example of this approach is \textit{fuzzing}, a very old technique invented i
 
 Since 2001, with the rise of "Open-Source Software", ensuring the security of software that was freely available and modifiable by anyone became a top priority: because the source code was freely accessible, it was only a matter of time before cyber-criminals began exploiting their vulnerabilities. Moreover, many modern paid applications often rely on such free software to provide their services. 
 
+\matteo{Be careful not dividing paragraph if not needed. A paragraph is a set of sentences that are related to the same topic, and should not be split with "newlines". The next 4 paragraphs are all related to the same exact topic and should be merged. You make this mistake all throughout the thesis, try to fix it. }
+
 Given their popularity, Google announced the ClusterFuzz project in 2012, a cloud-based fuzzing infrastructure to test security-critical components of the Chromium web browser, where fuzzer developers could upload their own fuzz tool and collect bug-bounties if their product discovered a crash in the browser.
 
 In 2016, this infrastructure was extended in a new campaign called OSS-Fuzz, allowing open-source developers to integrate their product in this ecosystem while Google provided its own infrastructure to perform continuous fuzzing of such projects.
@@ -33,14 +35,14 @@ All these automated fuzz-testing infrastructures are also valuable to researcher
 
 
 
-
+\matteo{You are missing a paragraph about our problem; continuous (automated) fuzzing works very well, but it is important to check that it is not missing any bug. That's what we are doing in this thesis (you can do it both in 1.1 or in 1.2)}
 
 \section{Thesis Idea and Contributions}
 This thesis revolved around analyzing the workflow and results produced by automated testing infrastructures, more specifically the OSS-Fuzz and FuzzBench campaigns. This is because although these infrastructures have enormous computing capabilities and have been providing continuous fuzzing for several years, they still suffer from machine errors and limitations due to their design's choices.
 
 This work will show that the evaluated fuzzing frameworks are indeed missing a relevant amount of bugs and vulnerabilities, that were then promptly reported to the respective developers hoping that this would help them make their software more secure. 
 
-
+\matteo{This list is not final, I'll check it later}
 
 \paragraph{Contributions}
 To summarize, this thesis makes the following contributions:
@@ -53,6 +55,9 @@ To summarize, this thesis makes the following contributions:
 
 
 \section{Outline}
+
+\matteo{Same story about paragraphs here, this should all be contained in one paragraph.}
+
 Chapter \ref{chap_2} provides all the necessary concepts to understand what is fuzzing and how a fuzzer works, along with notions about some tools that are widely used in this field. It also introduces the definition of "Open-Source Program" and the automated testing infrastructures analyzed in this work.
 
 Chapter \ref{chap_3} discusses the methodology applied during the selection of the projects and the test phase, including the problems faced during these process and the solutions found.

@@ -1,5 +1,7 @@
 \chapter{Background} \label{chap_2}
-\ \\
+
+\matteo{Good job with this one}
+
 This chapter will provide all the necessary background information and techniques employed in this thesis.
 We will start by explaining the concept of \textit{fuzz testing}, with an in-depth analysis of how it works, the main components of a fuzzing session and the different approaches available.
 Follows an introduction on software sanitizers, highlighting their relevance in the context of fuzzing.
@@ -9,9 +11,14 @@ Concludes a thorough description of the modern automated testing infrastructures
 
 
 \section{Fuzz Testing}
+\matteo{This is better now; I would suggest you stress a bit more how fuzzing works, right after the first paragraph. Maybe you can use a picture. Keep in mind that whoever is going to read this has most likely never heard about fuzzing, so it is worth explaining it carefully.}
+
+
 In the context of software development, \textit{fuzz testing} (or \textit{fuzzing}) refers to an automated software testing technique with the objective of triggering crashes, assertions, memory leaks and undefined behavior. This allows developers to test their programs for so called "corner-cases", meaning situations hard or complex to reproduce when the program is being properly used, that could lead to unexpected and/or unwanted behavior exploitable by malicious people and therefore should be handled properly.
 
 The main concept of fuzzing revolves around testing a program on many (seemingly) random inputs over several \textit{fuzzing sessions}, each time discovering a bit more about the structure of the program, and then use this knowledge to create new testcases that attempt to trigger previously unseen execution paths and bugs. Each session usually requires several hours or days to produce meaningful results; however, because this technique is mostly based on randomness, it also means that results may vastly differ across different sessions. For this reason, multiple fuzzing sessions are necessary before a conclusion regarding the safety of the program can be reached.
+
+\matteo{The classification based on "program's structure awareness" is far more important than this. I suggest you discuss deeply that one, and only briefly discuss this one later. Also, protocol fuzzing and application fuzzing are much less developed than "file format fuzzing".}
 
 We mainly define 3 types of fuzz testing:
 \begin{itemize}
@@ -77,6 +84,8 @@ All these steps are repeated across many different fuzzing sessions, sometimes e
 
 
 \subsection{Pros and Cons}
+\matteo{This section is not "Pros and Cons", this section is only about "Cons". You are basically making a half-page long discussion on why fuzzing sucks; moreover, most (if not all) these arguments are either false or exaggerated. Given that your thesis revolves around how to make fuzzing frameworks more precise, I suggest you remove this. Anyway, if you want to make such strong statements, you should cite some source (a reliable one, like a decent paper)}
+
 While fuzzing is a very effective and popular technique, it's important to mention that there is a trade-off between results obtained, time spent testing and resources available.
 
 Fuzzing is a resource- and disk-intensive process, putting the CPU cores under heavy load for several hours or even days while also generating potentially enormous log files, therefore preparing the right set of inputs that will be used to perform the tests and correctly configure the fuzzer is crucial to obtain good results.
@@ -124,6 +133,7 @@ The management of the shadow memory is done by ASan run-time library, containing
 
 This sanitizer is also provided with another component called \textit{Leak Sanitizer} (or \textit{LSan}), a memory leak detector enabled by default that returns which portions of the program are leaking memory as well as the size leaked, thanks to comprehensive and exhaustive stack traces. Although this tool may seem very helpful, it usually generate huge logs especially when having complex programs that heavily rely on external libraries, which oftentimes do not perform clean releases of the objects used.
 
+\matteo{Add references when you cite numbers. 3.4x seems also a bit too high; it should be 2x, but I might be wrong}
 
 Finally, ASan adds a slight overhead, increasing execution times by an average 170\% and memory usage by 3.4x.
 
@@ -148,14 +158,23 @@ Given that UUM bugs are notoriously hard to reproduce and debug, MSan provides t
 
 The management of the shadow memory is done by MSan run-time library, that maps the "shadow" and (optional) "origin" areas and marks as uninitialized any new allocated regions as well as the deallocated ones. To update the shadow region, a large subset of the standard \verb|libc| functions are intercepted.
 
+\matteo{Again, add some source for these numbers}
+
 Fixing these bugs generally requires little to none effort, but many developers avoid this sanitizer due to the huge slowdown that it introduces. In fact, MSan increases execution times by an average 300\% and memory usage by 2x on short programs, values that rapidly worsen with complex programs.
+
+\matteo{You are citing "the tests" you do later, which you have not introduced yet, so this will cause lots of confusion when someone reads it. Moreover, valgrind does both the job of MSan and ASan (even if ASan stuff is only performed on the heap); maybe this could become a new subsection where you talk about binary-level sanitizers?}
 
 While this sanitizers was initially included in the tests, it was later replaced by another memory-analysis tool called Valgrind, as most projects did not correctly integrate it and produced results that were not meaningful enough towards the final results.
 
 \subsection{UBSan}
-The \textit{Undefined Behavior Sanitizer} \cite{ubsan_docs} is a fast undefined-behavior detector for C/C++, that helps developers to find and fix undefined-behavior (UB) bugs. Common operations that may lead to undefined behaviors are: array subscription out of bounds, overflows/underflows originating from mathematical or logical operations, dereferenced, misaligned or null pointers and conversion between data types. This is because
+
+\matteo{You describe ASan and MSan with a decent level of details, but you only write a couple of things about UBSan. Try to say something more, study something about how it works and write it. (e.g., what is an undefined behavior? What are some example of it? (please don't add a page long table with a list of undefined behaviors) How dangerous are they? ...)}
+
+The \textit{Undefined Behavior Sanitizer} \cite{ubsan_docs} is a fast undefined-behavior detector for C/C++, that helps developers to find and fix undefined-behavior (UB) bugs. Common operations that may lead to undefined behaviors are: array subscription out of bounds, overflows/underflows originating from mathematical or logical operations, dereferenced, misaligned or null pointers and conversion between data types. This is because \matteo{<-- broken sentence}
 
 By default, due to its simplistic nature, the tool does not print stack-traces and uses a minimal run-time library, although the "print-stacktrace-mode" option can be enabled to obtain more comprehensive results.
+
+\matteo{sources}
 
 Finally, UBSan adds a trivial overhead, increasing execution times by an average 120\% and memory usage by 2x.
 
@@ -182,7 +201,8 @@ For this reason, we mention some key aspects that should be considered when appr
 \newpage
 \section{Continuous Fuzzing}
 \matteo{Introduce Google's role in the description.}
-\ziosaba{Google's role as in? the fact that it provides its own infrastructure for fuzzing and how it allows (virtually) any open-source project to enter this campaign?}
+\ziosaba{Google's role as in? the fact that it provides its own infrastructure for fuzzing and how it allows (virtually) any open-source project to enter this campaign?} 
+\matteo{Continuous fuzzing is a concept. Then, google implements it through some frameworks. You should introduce the concept, describe it thoroughly and then discuss who does it and how it does it.}
 
 The \textit{Google Open Source Project} \cite{google_oss} is a campaign started in 2004, one of the oldest open-source campaigns in the industry. 
 
@@ -192,7 +212,8 @@ Thanks to this campaign, many projects became popular and gained worldwide recog
 \ziosaba{This thesis will focus on two campaigns maintained by Google called \textit{OSS-Fuzz} \cite{ossfuzz_docs} and \textit{FuzzBench} \cite{{fuzzbench_docs}}: the first is a free platform that allows open-source developers to fuzz their programs autonomously relying on the computing resources provided by the Google Cloud service, while the latter allows fuzzer developers to test and improve their tools on real-word benchmarks thanks to automated tests and reports.
 More specifically, it revolves around fuzzing some of the projects that have been implemented in these repositories using alternative approaches, trying to discover bugs that will be then securely reported and disclosed to their developers in hope to have them fixed.}
 
-\ \\
+\matteo{I got here, I'll check the rest tomorrow.}
+
 \subsection{ClusterFuzz}
 The \textit{ClusterFuzz Project} is a scalable fuzzing infrastructure with the objective of discovering security and stability issues in software, it is the main platform used by Google to test its own products and also the fuzzing back-end for \textit{OSS-Fuzz}.
 
