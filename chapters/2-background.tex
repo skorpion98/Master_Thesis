@@ -133,10 +133,10 @@ The management of the shadow memory is done by ASan run-time library, containing
 
 This sanitizer is also provided with another component called \textit{Leak Sanitizer} (or \textit{LSan}), a memory leak detector enabled by default that returns which portions of the program are leaking memory as well as the size leaked, thanks to comprehensive and exhaustive stack traces. Although this tool may seem very helpful, it usually generate huge logs especially when having complex programs that heavily rely on external libraries, which oftentimes do not perform clean releases of the objects used.
 
+Finally, ASan adds a slight overhead, increasing execution times by an average 170\% and memory usage by 3.4x. \cite{serebryany2012addresssanitizer}
+
 \matteo{Add references when you cite numbers. 3.4x seems also a bit too high; it should be 2x, but I might be wrong}
-
-Finally, ASan adds a slight overhead, increasing execution times by an average 170\% and memory usage by 3.4x.
-
+\ziosaba{So it says in the first few lines of "Introduction" from the official paper, the wiki states an an average of 2, dunno which is more truthful}
 
 
 
@@ -160,11 +160,8 @@ The management of the shadow memory is done by MSan run-time library, that maps 
 
 \matteo{Again, add some source for these numbers}
 
-Fixing these bugs generally requires little to none effort, but many developers avoid this sanitizer due to the huge slowdown that it introduces. In fact, MSan increases execution times by an average 300\% and memory usage by 2x on short programs, values that rapidly worsen with complex programs.
-
-\matteo{You are citing "the tests" you do later, which you have not introduced yet, so this will cause lots of confusion when someone reads it. Moreover, valgrind does both the job of MSan and ASan (even if ASan stuff is only performed on the heap); maybe this could become a new subsection where you talk about binary-level sanitizers?}
-
-While this sanitizers was initially included in the tests, it was later replaced by another memory-analysis tool called Valgrind, as most projects did not correctly integrate it and produced results that were not meaningful enough towards the final results.
+Fixing these bugs generally requires little to none effort, but many developers avoid this sanitizer due to the huge slowdown that it introduces. In fact, MSan increases execution times by an average 300\% and memory usage by 2x on short programs, values that rapidly worsen with complex programs. \cite{stepanov2015memorysanitizer}
+\ziosaba{Stated in the abstract from the official paper}
 
 \subsection{UBSan}
 
@@ -177,6 +174,16 @@ By default, due to its simplistic nature, the tool does not print stack-traces a
 \matteo{sources}
 
 Finally, UBSan adds a trivial overhead, increasing execution times by an average 120\% and memory usage by 2x.
+
+
+\newpage
+\matteo{You are citing "the tests" you do later, which you have not introduced yet, so this will cause lots of confusion when someone reads it. Moreover, valgrind does both the job of MSan and ASan (even if ASan stuff is only performed on the heap); maybe this could become a new subsection where you talk about binary-level sanitizers?}
+
+\subsection{Valgrind}
+
+While this sanitizers was initially included in the tests, it was later replaced by another memory-analysis tool called Valgrind, as most projects did not correctly integrate it and produced results that were not meaningful enough towards the final results.
+
+
 
 
 

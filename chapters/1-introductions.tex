@@ -6,9 +6,10 @@ The Cybersecurity is an aspect of informatics whose role is ensuring the safety 
 
 In this context, \textit{software security} aims to analyze and detect bugs in a program that may pose a security threat to any user and/or organization employing said software. The "National Vulnerability Database" (NVD) classified software vulnerabilities in 5 root causes \cite{nist}: input validation, access control, exceptions handling, configuration errors and race condition. All these scenarios may lead to a criminal gaining access to your system and execute malicious code, potentially also with the intention of performing privilege escalation and take ownership of the machine. 
 
-One of the 7 components in the "Software Development Life Cycle" (SDLC) is \textit{Testing}, which means analyzing and checking your code to make sure that it satisfies some quality, correctness and security criteria both in terms of functionalities provided and underlying infrastructure. This also provides crucial information that can be used to further improve the development of the product.  
+One of the 7 components in the "Software Development Life Cycle" (SDLC) is \textit{Testing}, which means analyzing and checking your code to make sure that it satisfies some quality, correctness and security criteria both in terms of functionalities provided and underlying infrastructure: this may either be done "statically", focusing on prevention and removal of potential defects from source code by means of coding standards and best practices, or "dynamically", analyzing the code during its execution with different inputs.
 
-This may either be done "statically", focusing on prevention and removal of potential defects from source code by means of coding standards and best practices, or "dynamically", analyzing the code during its execution with different inputs.
+While testing a project is crucial to ensure its security and provide useful information that can be used to further improve the development of the product, it also involves fixing and solving many different kinds of problems affecting your code, which will obviously require time, resources, knowledge and effort.   
+
 
 
 
@@ -21,48 +22,30 @@ An example of this approach is \textit{fuzzing}, a very old technique invented i
 
 Since 2001, with the rise of "Open-Source Software", ensuring the security of software that was freely available and modifiable by anyone became a top priority: because the source code was freely accessible, it was only a matter of time before cyber-criminals began exploiting their vulnerabilities. Moreover, many modern paid applications often rely on such free software to provide their services. 
 
-\matteo{Be careful not dividing paragraph if not needed. A paragraph is a set of sentences that are related to the same topic, and should not be split with "newlines". The next 4 paragraphs are all related to the same exact topic and should be merged. You make this mistake all throughout the thesis, try to fix it. }
+Given their popularity, Google announced the ClusterFuzz project in 2012, a cloud-based fuzzing infrastructure for testing security-critical components of the Chromium web browser, where fuzzer developers could upload their own fuzzing tool and be rewarded if their product detected a crash in the browser. In 2016, this infrastructure was repurposed as the back-end for OSS-Fuzz, a new campaign that provided continuous fuzzing at Google-scale for open-source developers. Later, in 2021, Google announced yet another new project called FuzzBench, which embraced the original purpose of ClusterFuzz and focused on supporting the development of open-source fuzzers thanks to tests based on real-world benchmarks and daily reports. All of these frameworks use Google Cloud as their common sharing infrastructure, allowing them to easily share and access data independently. These automated fuzz-testing infrastructures are also valuable to researchers, that use them to analyze and understand the development of open-source projects, access the corpora used by their developers and perform fuzzing locally for both educational and research purposes.
 
-Given their popularity, Google announced the ClusterFuzz project in 2012, a cloud-based fuzzing infrastructure to test security-critical components of the Chromium web browser, where fuzzer developers could upload their own fuzz tool and collect bug-bounties if their product discovered a crash in the browser.
-
-In 2016, this infrastructure was extended in a new campaign called OSS-Fuzz, allowing open-source developers to integrate their product in this ecosystem while Google provided its own infrastructure to perform continuous fuzzing of such projects.
-
-Later, in 2021, Google announced yet a new project called FuzzBench, focused on helping the development of open-source fuzzers thanks to tests based on real-world benchmarks and daily reports.
-
-These frameworks use a common sharing infrastructure that is Google Cloud, allowing them to easily exchange and access data independently.
-
-All these automated fuzz-testing infrastructures are also valuable to researchers to analyze and understand the development of open-source projects, access the corpora used by their developers and perform fuzzing locally for both educational and research purposes. 
+While automating tests is obviously a time-effective solution with respect to manual assessment, allowing machines to perfectly replicate the same repetitive task continuously and over extended periods of time with high consistency and accuracy, they are limited by the configuration and design choices made by the developers, resulting in a partial loss of information. For this reason, it could be expected that the automated fuzz-testing infrastructures mentioned before may be missing bugs during their tests, which is exactly the main focus of this work.  
 
 
 
-\matteo{You are missing a paragraph about our problem; continuous (automated) fuzzing works very well, but it is important to check that it is not missing any bug. That's what we are doing in this thesis (you can do it both in 1.1 or in 1.2)}
 
 \section{Thesis Idea and Contributions}
-This thesis revolved around analyzing the workflow and results produced by automated testing infrastructures, more specifically the OSS-Fuzz and FuzzBench campaigns. This is because although these infrastructures have enormous computing capabilities and have been providing continuous fuzzing for several years, they still suffer from machine errors and limitations due to their design's choices.
-
-This work will show that the evaluated fuzzing frameworks are indeed missing a relevant amount of bugs and vulnerabilities, that were then promptly reported to the respective developers hoping that this would help them make their software more secure. 
-
-\matteo{This list is not final, I'll check it later}
+This thesis focused on analyzing the workflow and results produced by automated testing infrastructures, more specifically regarding the OSS-Fuzz and FuzzBench: although these campaigns have enormous computing capabilities and performed continuous fuzzing for several years, they still suffer from machine errors and limitations due to their design choices. This work will show that these frameworks are indeed missing a relevant amount of bugs, that were then promptly reported to the respective developers hoping that this would help them make their software more secure. 
 
 \paragraph{Contributions}
 To summarize, this thesis makes the following contributions:
 \begin{itemize}
-    \item A study of the accuracy of existing continuous fuzzing frameworks.
-    \item An assessment of the relevance of software sanitizers in fuzzing campaigns.
-    \item An enhancement for the design of more accurate continuous fuzzing frameworks.
+    \item A study of the accuracy of existing continuous fuzzing frameworks
+    \item \ziosaba{A discussion on how bugs are perceived by open-source developers}
+    \item An assessment of the relevance of software sanitizers in fuzzing campaigns
+    \item An enhancement for the design of more accurate continuous fuzzing frameworks
 \end{itemize}
+\matteo{This list is not final, I'll check it later}
+
 
 
 
 \section{Outline}
+Chapter \ref{chap_2} provides all the necessary concepts to understand what is fuzzing and how a fuzzer works, along with notions about some tools that are widely used in this field. It also introduces the definition of "Open-Source Program" and the automated testing infrastructures analyzed in this work. Chapter \ref{chap_3} discusses the methodology applied during the selection of the projects and the test phase, including the problems faced during these process and the solutions found. Chapter \ref{chap_4} shows the results obtained, analyzing and talking about what could be inferred from them, discusses the reports issued and the developers' responses. Chapter \ref{chap_5} presents some final considerations about fuzzing, how it's perceived in the current era and provides some insights and suggestions on how to improve the current infrastructure.
 
-\matteo{Same story about paragraphs here, this should all be contained in one paragraph.}
-
-Chapter \ref{chap_2} provides all the necessary concepts to understand what is fuzzing and how a fuzzer works, along with notions about some tools that are widely used in this field. It also introduces the definition of "Open-Source Program" and the automated testing infrastructures analyzed in this work.
-
-Chapter \ref{chap_3} discusses the methodology applied during the selection of the projects and the test phase, including the problems faced during these process and the solutions found.
-
-Chapter \ref{chap_4} shows the results obtained, analyzing their importance, as well as discussing the reports issued and the developers' responses.
-
-Chapter \ref{chap_5} presents some final considerations about fuzzing, how it's perceived in the current era and provides some insights and suggestions on how to improve the current infrastructure.
 \ziosaba{Chapter 5 outline to revise later}
