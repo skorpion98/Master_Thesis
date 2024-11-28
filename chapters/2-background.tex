@@ -1,7 +1,5 @@
 \chapter{Background} \label{chap_2}
-
-\matteo{Good job with this one}
-
+\ \\
 This chapter will provide all the necessary background information and techniques employed in this thesis.
 We will start by explaining the concept of \textit{fuzz testing}, with an in-depth analysis of how it works, the main components of a fuzzing session and the different approaches available.
 Follows an introduction on software sanitizers, highlighting their relevance in the context of fuzzing.
@@ -10,15 +8,12 @@ Concludes a thorough description of the modern automated testing infrastructures
 
 
 
+
+
 \section{Fuzz Testing}
-\matteo{This is better now; I would suggest you stress a bit more how fuzzing works, right after the first paragraph. Maybe you can use a picture. Keep in mind that whoever is going to read this has most likely never heard about fuzzing, so it is worth explaining it carefully.}
+One of the most popular approaches to testing a program is \textit{automated testing}, which involves the use of a software separate from the one being tested to control its execution flow and analyze the results obtained, comparing the actual results with the expected ones. It is particularly useful to formalize repetitive tasks into automated operations with high scalability and fast execution times, although manual assessment is still required to ensure the correctness of the operations performed. 
 
-
-In the context of software development, \textit{fuzz testing} (or \textit{fuzzing}) refers to an automated software testing technique with the objective of triggering crashes, assertions, memory leaks and undefined behavior. This allows developers to test their programs for so called "corner-cases", meaning situations hard or complex to reproduce when the program is being properly used, that could lead to unexpected and/or unwanted behavior exploitable by malicious people and therefore should be handled properly.
-
-The main concept of fuzzing revolves around testing a program on many (seemingly) random inputs over several \textit{fuzzing sessions}, each time discovering a bit more about the structure of the program, and then use this knowledge to create new testcases that attempt to trigger previously unseen execution paths and bugs. Each session usually requires several hours or days to produce meaningful results; however, because this technique is mostly based on randomness, it also means that results may vastly differ across different sessions. For this reason, multiple fuzzing sessions are necessary before a conclusion regarding the safety of the program can be reached.
-
-\matteo{The classification based on "program's structure awareness" is far more important than this. I suggest you discuss deeply that one, and only briefly discuss this one later. Also, protocol fuzzing and application fuzzing are much less developed than "file format fuzzing".}
+Among automated testing techniques, \textit{fuzz testing} (or \textit{fuzzing}) became increasingly popular and widely used due to its ability to trigger crashes, assertions, memory leaks and undefined behavior. This allows developers to test their programs for so called "corner-cases", meaning situations hard or complex to reproduce when the program is being properly used, that could lead to unexpected and/or unwanted behavior exploitable by malicious people and therefore should be handled properly. It also allows for great flexibility, as this technique can be applied to an entire binary or smaller portions of code, introducing specific testing functions.
 
 We mainly define 3 types of fuzz testing:
 \begin{itemize}
@@ -26,13 +21,44 @@ We mainly define 3 types of fuzz testing:
     \item \textbf{protocol fuzzing:} used to test the behavior of network elements and servers when invalid messages are sent over a chosen protocol, useful to ensure that such content is not misinterpreted and potentially executed as commands
     \item  \textbf{file format fuzzing:} used for programs that accept "structured inputs", i.e. files that have a precise and standard format (like .doc, .jpg), whose structure and content are altered to trigger unwanted behavior
 \end{itemize}
+
 This work focused on the third methodology.
 
+\newpage
+\begin{figure}[h]
+\makebox[\textwidth][c]{\includegraphics[width=0.665\paperwidth]{foto/how_fuzzer_works.jpg}}
+\caption{Simplified fuzzing workflow}
+\label{fig:fuzzer_workflow}
+\end{figure}
 
+The main concept of fuzzing revolves around testing a program on many (seemingly) random inputs over several \textit{fuzzing sessions}, each time discovering a bit more about the structure of the program, and then use this knowledge to create new testcases that attempt to trigger previously unseen execution paths and bugs: when an interesting behavior is observed (i.e. crash, assertion, bugs, ...), the related input is reported to the user and saved for future operations, described in the following paragraphs. 
+Each fuzzing session usually takes several hours or days to produce meaningful results; however, because this technique is mostly based on randomness, it also means that results may vastly differ between sessions, even across tests using the same configuration and resources. For this reason, multiple sessions are necessary before a conclusion regarding the safety of the program can be reached.
+
+To determine whether or not a particular testcase resulted in interesting behavior, one of the most popular techniques to analyze its impact is \textit{code coverage}: this metric represents a percentage that defines how much of the source code has been executed during a single fuzzing session, with the assumption that a high value means that most of the code has already been explored and there is a lower chance of having undetected bugs.
+
+\begin{figure}[h]
+\makebox[\textwidth][c]{\includegraphics[width=0.6\paperwidth]{foto/cfg.png}}
+\caption{Example of a simple program represented using a CFG}
+\label{fig:cfg}
+\end{figure}
+
+This is usually done by creating a "Control Flow Graph" (CFG) of the program, i.e. a representation in graph notation of all paths available during a single execution flow, and measuring: how many nodes (basic blocks) and edges (jumps) were traversed, the number of functions triggered and the branches activated during conditional statements.
+Therefore, we define \textit{interesting input} to be any testcase that increases the code coverage achieved and/or triggers a bug during its execution, and it will also be used as reference during the generation of new testcases.
+
+
+
+
+
+
+\newpage
 \subsection{What is a fuzzer}  \label{fuzzers}
-A \textit{fuzzer} is the tool necessary to perform fuzz testing, taking as inputs the program being tested and a set of testcases that will be used during the fuzzing session. It is responsible for executing the program against all the provided inputs, analyze each execution and produce new and useful testcases for future fuzzing session.
+A \textit{fuzzer} is the tool performing fuzz testing, taking as inputs the program being tested and a set of testcases that will be used during the fuzzing session. It is responsible for executing the program against all the provided inputs, analyze each execution and produce new and useful testcases for future fuzzing session.
 
-A fuzzer's work is based on two main metrics: \textit{coverage} and \textit{interesting inputs}. The code coverage represents a percentage that defines how much of the source code has been executed during a single fuzzing session, therefore a high value means that most of the code has been already explored and there is a lower chance of having undetected bugs. This is usually measured by creating a "Control Flow Graph" (CFG) of the program and considering the following elements: number of edges explored, functions triggered and all possible branches for conditional statements. An \textit{interesting input} is considered to be any testcases that increases the code coverage achieved and/or triggers a bug during its execution, and it is used as reference during the generation of new testcases.
+\begin{figure}[h]
+\makebox[\textwidth][c]{\includegraphics[width=0.6\paperwidth]{foto/fuzzing_steps.png}}
+\caption{Detailed steps performed by a fuzzer}
+\label{fuzzing_steps}
+\end{figure}
 
 In general, a fuzzer is composed by the following key elements. \cite{afl_docs}
 
@@ -48,9 +74,12 @@ In general, a fuzzer is composed by the following key elements. \cite{afl_docs}
 
 \textbf{Corpus.}\ \ \ Location where testcases are stored, usually disk or memory. An example of input corpus may be composed by several testcases with the same properties, like crashing the program under a specific situation. An example of output corpus may be composed by all the testcases that are considered "interesting".
 
+
+
+\newpage
 Fuzzers can be then categorized using the 3 following characteristics.
 
-\textbf{Input generation.}\ \ \  At the end of each fuzzing session, one of the most important operations performed by the fuzzer is the generation of new testcases, with the objective of diversifying and increasing the effectiveness of the corpora that will be used on future fuzzing sessions: more specifically, an effective fuzzer should be capable of generating inputs "valid enough" so that they are not rejected from the program's parsers, but also "invalid enough" to potentially trigger corner cases. Given this, we  distinguish between \textit{mutation-based} and \textit{generation-based} fuzzers. The \textit{mutation-based fuzzers} require an initial seed of inputs as reference, and the generation of new inputs is performed by applying "mutators" on the provided seeds: these operations range from flipping/adding/removing bits (or bytes), performing mathematical operations and sometimes even completely randomizing its content. Finally, these mutations are usually mixed forming sequences to increase randomness. The \textit{generation-based fuzzers}, instead, rely on a good source of randomness to generate new inputs from scratch, and for this reason they do not depend on the existence of a good initial corpus nor on its quality, although they require more starting time before the tests become effective.
+\textbf{Input generation.}\ \ \  During each fuzzing session, one of the most important operations performed by the fuzzer is the generation of new testcases, with the objective of diversifying and increasing the effectiveness of the corpora that will be used on future fuzzing sessions: more specifically, an effective fuzzer should be capable of generating inputs "valid enough" so that they are not rejected from the program's parsers, but also "invalid enough" to potentially trigger corner cases. Given this, we  distinguish between \textit{mutation-based} and \textit{generation-based} fuzzers. The \textit{mutation-based fuzzers} require an initial seed of inputs as reference, and the generation of new inputs is performed by applying "mutators" on the provided seeds: these operations range from flipping/adding/removing bits (or bytes), performing mathematical operations and sometimes even completely randomizing its content. Finally, these mutations are usually mixed forming sequences to increase randomness. The \textit{generation-based fuzzers}, instead, rely on a good source of randomness to generate new inputs from scratch, and for this reason they do not depend on the existence of a good initial corpus nor on its quality, although they require more starting time before the tests become effective.
 
 \textbf{Input's structure awareness.}\ \ \ Another information useful to the fuzzer, although not always available, is the "input model", i.e. the correct structure that a file must have when testing programs that follow rigorous standards. However, not all of them provide this feature, and for this reason we define \textit{smart} and \textit{dumb} fuzzers.
 A \textit{smart mutation fuzzer} might leverage this knowledge to switch between different types of inputs, while a \textit{dumb mutation fuzzer} can only rely on the structure of the "interesting inputs" and apply limited random mutations, usually resulting in a much lower proportion of valid inputs being generated.
@@ -59,14 +88,11 @@ A \textit{smart generation fuzzer} uses this information to avoid wasting resour
 \textbf{Program's structure awareness.}\ \ \  Fuzzers may be accompanied by program analysis' techniques to increase the efficiency and effectiveness of the tests. A \textit{black-box fuzzer} is completely unaware of the program's structure, therefore assumes the program as a simple machine that takes a random input and generates an according output: this approach is relatively fast, can be easily parallelized and has good scalability, however it will most likely find only bugs that do not require particular conditions to be met to be triggered, also called "surface bugs". A \textit{white-box fuzzer} employs program analysis' techniques to systematically explore and reach critical program locations through meticulously crafted inputs, allowing you to discover bugs that could be potentially hidden deep in the program: while this approach is arguably the most effective one, it implies that bugs related to unknown aspects of the program can be easily missed, and the time used to analyze the program as well as generating such specialized input exponentially increases with the program's complexity.
 A \textit{gray-box fuzzer} attempts to find a balance between efficiency and effectiveness by integrating the best aspects of both approaches: using a minimal amount of knowledge over the program's structure to achieve a sufficient degree of code coverage such that the results obtained are satisfactory.
 
-Given all this information, this thesis focused on performing gray-box testing using the current state-of-the-art fuzzer called \textit{American Fuzzy Lop} (also known as \textit{AFL} \cite{AFL}), defined as a "dumb mutation-based fuzzer". Among the many results achieved by this tool, there are two honorable mentions.
-
-In September 2014, AFL discovered "Shellshock" \cite{shellshock} (also known as "Bashdoor"), a family of security bugs affecting the Unix Bash shell that allowed malicious users to execute arbitrary commands without confirmation.
-
-In April 2015, AFL discovered the famous "Heartbleed" \cite{heartbleed} bug in OpenSSL, which allowed malicious users to decipher the otherwise encrypted communications used by the TLS protocol. 
 
 
 
+\newpage
+Given all this information, this thesis focused on performing \textit{file format gray-box testing} using the current state-of-the-art fuzzer called \textit{American Fuzzy Lop} (also known as \textit{AFL} \cite{AFL}), defined as a "dumb mutation-based fuzzer". Among the many results achieved by this tool, there are two honorable mentions. In September 2014, AFL discovered "Shellshock" \cite{shellshock} (also known as "Bashdoor"), a family of security bugs affecting the Unix Bash shell that allowed malicious users to execute arbitrary commands without confirmation. In April 2015, AFL discovered the famous "Heartbleed" \cite{heartbleed} bug in OpenSSL, which allowed malicious users to decipher the otherwise encrypted communications used by the TLS protocol. 
 
 
 \subsection{Fuzzing session (or "Fuzzing session, metrics and bug triage?")}
@@ -82,20 +108,6 @@ Finally, the developer has to analyze all the inputs that caused a bug and perfo
 
 All these steps are repeated across many different fuzzing sessions, sometimes even changing the scope of the tests to increase code coverage or stressing the program with many buggy inputs, each time making the program more secure against vulnerabilities and more robust to extraneous inputs. 
 
-
-\subsection{Pros and Cons}
-\matteo{This section is not "Pros and Cons", this section is only about "Cons". You are basically making a half-page long discussion on why fuzzing sucks; moreover, most (if not all) these arguments are either false or exaggerated. Given that your thesis revolves around how to make fuzzing frameworks more precise, I suggest you remove this unless you want to give the impression that fuzzing sucks and thus your work is useless. Anyway, if you want to make such strong statements, you should cite some source (a reliable one, like a decent paper)}
-
-While fuzzing is a very effective and popular technique, it's important to mention that there is a trade-off between results obtained, time spent testing and resources available.
-
-Fuzzing is a resource- and disk-intensive process, putting the CPU cores under heavy load for several hours or even days while also generating potentially enormous log files, therefore preparing the right set of inputs that will be used to perform the tests and correctly configure the fuzzer is crucial to obtain good results.
-However, this process is also driven by randomness, meaning that each fuzzing session will always yield slightly different results and coverage achieved. 
-
-Moreover, during a fuzzing session, there will be a point in time where either the inputs generated by the fuzzer will not trigger new execution flows or no new bugs are discovered for quite some time: reaching this state does not mean that the program is finally free of other bugs, as the conditions to trigger them might simply have not happened yet, and it's obviously impossible to know when this will happen as bugs may be discovered randomly. For this reason it is important to mention that running a fuzzing session for several days or weeks without bugs does not necessarily imply that the program is secure; yet, testing a program on all possible inputs would be obviously unfeasible.
-
-Finally, as any other testing technique, it easily generates false positives (trivial or benign warnings) and false negative (incorrect or misleading) results, further overloading the already tedious work of manually assessing each bug.
-
-\ziosaba{Explain other shortcomings of fuzz testing, maybe also available solution to mitigate them??? Not really sure what else to say}
 
 
 
@@ -154,26 +166,27 @@ A UUM bugs usually originates from any operation that loads a value from an unin
 \label{fig:msan_shadow}
 \end{figure}
 
-Given that UUM bugs are notoriously hard to reproduce and debug, MSan provides the "origin-tracking-mode" and "advanced-origin-tracking-mode" to obtain more comprehensive stack-traces between the allocation and load of uninitialized variables, although the advanced option requires huge amount of memory.
+Given that UUM bugs are notoriously hard to reproduce and debug, MSan provides the "origin-tracking-mode" to obtain more comprehensive and descriptive stack-traces. If necessary, there is also the "advanced-origin-tracking-mode", which records the entire stack and all operations that happen between the allocation and load of uninitialized variables, but its usability is still discussed due to the huge amounts of memory it requires.
 
 The management of the shadow memory is done by MSan run-time library, that maps the "shadow" and (optional) "origin" areas and marks as uninitialized any new allocated regions as well as the deallocated ones. To update the shadow region, a large subset of the standard \verb|libc| functions are intercepted.
-
-\matteo{Again, add some source for these numbers}
 
 Fixing these bugs generally requires little to none effort, but many developers avoid this sanitizer due to the huge slowdown that it introduces. In fact, MSan increases execution times by an average 300\% and memory usage by 2x on short programs, values that rapidly worsen with complex programs. \cite{stepanov2015memorysanitizer}
 \ziosaba{Stated in the abstract from the official paper}
 
 \subsection{UBSan}
-
-\matteo{You describe ASan and MSan with a decent level of details, but you only write a couple of things about UBSan. Try to say something more, study something about how it works and write it. (e.g., what is an undefined behavior? What are some example of it? (please don't add a page long table with a list of undefined behaviors) How dangerous are they? ...)}
-
 The \textit{Undefined Behavior Sanitizer} \cite{ubsan_docs} is a fast undefined-behavior detector for C/C++, that helps developers to find and fix undefined-behavior (UB) bugs. Common operations that may lead to undefined behaviors are: array subscription out of bounds, overflows/underflows originating from mathematical or logical operations, dereferenced, misaligned or null pointers and conversion between data types. This is because \matteo{<-- broken sentence}
 
 By default, due to its simplistic nature, the tool does not print stack-traces and uses a minimal run-time library, although the "print-stacktrace-mode" option can be enabled to obtain more comprehensive results.
 
 \matteo{sources}
 
-Finally, UBSan adds a trivial overhead, increasing execution times by an average 120\% and memory usage by 2x.
+Finally, UBSan adds a trivial overhead, increasing execution times by an average 120\% and memory usage by 2x. \cite{ubsan_docs}
+
+\matteo{You describe ASan and MSan with a decent level of details, but you only write a couple of things about UBSan. Try to say something more, study something about how it works and write it. (e.g., what is an undefined behavior? What are some example of it? (please don't add a page long table with a list of undefined behaviors) How dangerous are they? ...)}
+
+
+
+
 
 
 \newpage
