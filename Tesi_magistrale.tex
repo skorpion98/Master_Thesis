@@ -79,9 +79,16 @@ non so mai che scriverci :(
 
 \begin{abstract}
 
-	In a world that relies on digital systems, security of software applications is a crucial property to protect both people and their assets. To this end, many techniques have been proposed which can detect a wide range of vulnerabilities before they could be exploited by malicious entities. The most prominent example of such techniques is \textit{Fuzz Testing}; it works by executing the software many times, with different inputs each time. The key idea behind it is that, by producing many inputs, the \textit{fuzzer} will eventually produce one that is able to trigger a bug.
+	\matteo{First draft}
 
-	Fuzzers shine in exercising many features of the target application by executing as much code as they can reach with new inputs. While reaching constantly increasing \textit{coverage}, fuzzers may miss bugs that do not cause observable behaviors at higher level. To tackle this issue, fuzzing is often used in combination with software sanitizations, a technique that will detect subtle bugs any time they are triggered.
+	In a world that relies on digital systems, security of software applications is a crucial property to protect both people and their assets. To this end, many techniques have been proposed which can detect a wide range of vulnerabilities before they can be exploited by malicious entities. The most prominent example of such techniques is \textit{Fuzz Testing}; it works by executing the software many times, generating new inputs each time to exercise as many functionalities of the code as possible. The key idea behind it is that, by producing many inputs, the \textit{fuzzer} will eventually produce one that is able to trigger a bug.
+
+	Thanks to their \textit{fuzzing strategies}, fuzzers shine in producing inputs that allow them to execute new code as testing time passes. While reaching constantly increasing \textit{coverage}, fuzzers may miss bugs that do not cause observable behaviors at higher level. To tackle this issue, fuzzing is often used in combination with software sanitizations, a technique that detects specific silent bugs at run-time. The combination of the two techniques has become the most popular approach to detect bugs in software.
+
+	To ease the deployment of fuzzing, fuzzing frameworks are being proposed. These frameworks are fully autonomous, and allow for \textit{continuous testing}. While they usually rely on a private disclosure mechanism for new bugs, these frameworks publicly release lots of data that can be analyzed. With all this accessible data, no bug should be overlooked, or an attacker could leverage the available data to detect it with a much lower effort than running fuzzing campaigns, and potentially exploit it to attack the target software.
+	
+	In this thesis, we are going to evaluate fuzzing frameworks for possibly overlooked bugs. We will be exploring two main directions: first, we are going to evaluate fully autonomous mechanisms, where suboptimal configurations or procedures can cause some bugs to be missed; then, we are going to evaluate another class of frameworks where the human factor is crucial in the detection of new bugs and vulnerabilities.
+	We will show that, unfortunately, these frameworks are indeed missing a relevant amount of bugs. These bugs can be detected starting from publicly available data with low effort and many of them have security implication. After reporting all the bugs we found during our evaluation, we contacted the maintainers of such frameworks and proposed them new approaches to limit the amount of overlooked bugs.
 
 \end{abstract}
 
