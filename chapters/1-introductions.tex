@@ -16,9 +16,9 @@ While testing a project is crucial to ensure its security and provide useful inf
 
 
 \section{Context}
-One of the most important goals of software testing is \textit{finding bugs}, defects in the code causing unwanted and unexpected results, that hinder the security of the product and may lead to vulnerabilities being exploited by malicious people. In this context, a popular technique is \textit{automated testing}, which is based on using a tool to control the execution flow of the software being tested and analyze its results via repetitive tasks performed over long periods of time. 
+One of the most important goals of software testing is \textit{finding bugs}, defects in the code causing unwanted and unexpected results, that hinder the security of the product and may lead to vulnerabilities being exploited by malicious people. \matteo{Automated testing is not a technique, is more of an approach; moreover, it is not tailored to fuzzing (i.e. you should change the part about controlling the execution flow).} In this context, a popular technique is \textit{automated testing}, which is based on using a tool to control the execution flow of the software being tested and analyze its results via repetitive tasks performed over long periods of time. 
 
-An example of this approach is \textit{fuzzing}, a very old technique invented in 1988 primarily used to automate simple tests previously performed by humans, that gained popularity due to its ability to discover crashes and bugs. Its base idea revolves around feeding (seemingly) random inputs to a program, analyze its execution flow and generate new testcases with the intention of exploring all possible paths in the code as well as trigger unexpected behavior. This process is repeated across several and extensive fuzzing sessions, while its effectiveness and simplicity of use allowed developers from all languages and level of knowledge to improve the security of their software. It also discovered one of the most famous and critical bugs in history, the "Heartbleed" bug that affected OpenSSL.
+An example of this approach is \textit{fuzzing}, a technique proposed in 1988 primarily used to automate simple tests previously performed by humans, that gained popularity due to its ability to discover crashes and bugs. Its base idea revolves around feeding (seemingly) random inputs to a program, analyze its execution flow and generate new testcases with the intention of exploring all possible paths in the code as well as trigger unexpected behavior. This process is repeated across several and extensive fuzzing sessions, while its effectiveness and simplicity of use allowed developers from all languages and level of knowledge to improve the security of their software. It also discovered one of the most famous and critical bugs in history, the "Heartbleed" bug that affected OpenSSL.
 
 Since 2001, with the rise of "Open-Source Software", ensuring the security of software that was freely available and modifiable by anyone became a top priority: because the source code was freely accessible, it was only a matter of time before cyber-criminals began exploiting their vulnerabilities. Moreover, many modern paid applications often rely on such free software to provide their services. 
 
@@ -30,6 +30,9 @@ While test automation is obviously a time-efficient solution compared to manual 
 
 
 \section{Thesis Idea and Contributions}
+
+\matteo{I find this introduction to be okay up to here; you should write something more in this subsection though; Give a few more details about what you do in this thesis and the results, but keep a high level of description and most importantly avoid technical stuff.}
+
 This thesis focused on analyzing the workflow and results produced by automated testing infrastructures, more specifically OSS-Fuzz and FuzzBench: although these campaigns have enormous computing capabilities and have been performing continuous fuzzing for several years, they still suffer from machine errors and limitations due to their design choices. This work will show that these frameworks are indeed missing a relevant amount of bugs, that were promptly reported to the respective developers hoping that this would help them make their software more secure.
 
 
@@ -37,7 +40,6 @@ This thesis focused on analyzing the workflow and results produced by automated 
 To summarize, this thesis makes the following contributions:
 \begin{itemize}
     \item A study of the accuracy of existing continuous fuzzing frameworks
-    \item \ziosaba{A discussion on how bugs are perceived by open-source developers}
     \item An assessment of the relevance of software sanitizers in fuzzing campaigns
     \item An enhancement for the design of more accurate continuous fuzzing frameworks
 \end{itemize}
@@ -47,6 +49,6 @@ To summarize, this thesis makes the following contributions:
 
 
 \section{Outline}
-Chapter \ref{chap_2} provides all the necessary concepts to understand what is fuzzing and how a fuzzer works, along with notions about some tools that are widely used in this field. It also introduces the definition of "Open-Source Program" and the automated testing infrastructures analyzed in this work. Chapter \ref{chap_3} discusses the methodology applied during the selection of the projects and the test phase, including the problems faced during these process and the solutions found. Chapter \ref{chap_4} shows the results obtained, analyzing and talking about what could be inferred from them, discusses the reports issued and the developers' responses. Chapter \ref{chap_5} presents some final considerations about fuzzing, how it's perceived in the current era and provides some insights and suggestions on how to improve the current infrastructure.
+This thesis is structured as follows: chapter \ref{chap_2} provides all the necessary concepts to understand what is fuzzing and how a fuzzer works, along with notions about some tools that are widely used in this field. It also introduces the definition of "Open-Source Program" and the automated testing infrastructures analyzed in this work. Chapter \ref{chap_3} discusses the methodology applied during the selection of the projects and the test phase, including the problems faced during these process and the solutions found. Chapter \ref{chap_4} shows the results obtained, analyzing and talking about what could be inferred from them, discusses the reports issued and the developers' responses. Chapter \ref{chap_5} presents some final considerations about fuzzing, how it's perceived in the current era and provides some insights and suggestions on how to improve the current infrastructure.
 
 \ziosaba{Chapter 5 outline to revise later}
