@@ -11,6 +11,9 @@ Concludes a thorough description of the modern automated testing infrastructures
 
 
 \section{Fuzz Testing}
+
+\matteo{Same thing as before about automated testing; automated testing is just a way of saying that the testing is done autonomously (i.e. there is no person behind a screen doing stuff). It doesn't say anything about the involved technique itself (it might be fuzzing, it might be symbolic execution, it might be a monkey pressing random keys etc...)}
+
 One of the most popular approaches to testing a program is \textit{automated testing}, which involves the use of a software separate from the one being tested to control its execution flow and analyze the results obtained, comparing the actual results with the expected ones. It is particularly useful to formalize repetitive tasks into automated operations with high scalability and fast execution times, although manual assessment is still required to ensure the correctness of the operations performed. 
 
 Among automated testing techniques, \textit{fuzz testing} (or \textit{fuzzing}) became increasingly popular and widely used due to its ability to trigger crashes, assertions, memory leaks and undefined behavior. This allows developers to test their programs for so called "corner-cases", meaning situations hard or complex to reproduce when the program is being properly used, that could lead to unexpected and/or unwanted behavior exploitable by malicious people and therefore should be handled properly. It also allows for great flexibility, as this technique can be applied to an entire binary or smaller portions of code, introducing specific testing functions.
@@ -24,12 +27,13 @@ We mainly define 3 types of fuzz testing:
 
 This work focused on the third methodology.
 
-\newpage
 \begin{figure}[h]
 \makebox[\textwidth][c]{\includegraphics[width=0.665\paperwidth]{foto/how_fuzzer_works.jpg}}
 \caption{Simplified fuzzing workflow}
 \label{fig:fuzzer_workflow}
 \end{figure}
+
+\matteo{Here you say that "interesting behaviors" are crashes, then you say that "interesting behaviors" are used to detect coverage. Let's be clear: an "interesting input" might be defined as an input that produces new coverage. That input is going to be mutated further to hopefully get even more coverage and so on. Then, some input trigger crashes: these crashes are reported to the user, but those input are not going to be mutated further.}
 
 The main concept of fuzzing revolves around testing a program on many (seemingly) random inputs over several \textit{fuzzing sessions}, each time discovering a bit more about the structure of the program, and then use this knowledge to create new testcases that attempt to trigger previously unseen execution paths and bugs: when an interesting behavior is observed (i.e. crash, assertion, bugs, ...), the related input is reported to the user and saved for future operations, described in the following paragraphs. 
 Each fuzzing session usually takes several hours or days to produce meaningful results; however, because this technique is mostly based on randomness, it also means that results may vastly differ between sessions, even across tests using the same configuration and resources. For this reason, multiple sessions are necessary before a conclusion regarding the safety of the program can be reached.
@@ -92,10 +96,18 @@ A \textit{gray-box fuzzer} attempts to find a balance between efficiency and eff
 
 
 \newpage
+
+\matteo{We used AFL++, not AFL. Maybe you can say that modern fuzzers come from a solution that represented a breakthrough in the fuzzing research (AFL), then say something about, and finally say that this was 10-15 years ago (check it maybe?) and since then other (more precise) solutions have been proposed; AFL++ is one of those and is actually considered the sate-of-the-art solution for fuzzing.}
+
+\matteo{btw, you did not fuzz in this thesis; as far as we know the testcases might be generated with who knows what fuzzers.}
+
 Given all this information, this thesis focused on performing \textit{file format gray-box testing} using the current state-of-the-art fuzzer called \textit{American Fuzzy Lop} (also known as \textit{AFL} \cite{AFL}), defined as a "dumb mutation-based fuzzer". Among the many results achieved by this tool, there are two honorable mentions. In September 2014, AFL discovered "Shellshock" \cite{shellshock} (also known as "Bashdoor"), a family of security bugs affecting the Unix Bash shell that allowed malicious users to execute arbitrary commands without confirmation. In April 2015, AFL discovered the famous "Heartbleed" \cite{heartbleed} bug in OpenSSL, which allowed malicious users to decipher the otherwise encrypted communications used by the TLS protocol. 
 
 
 \subsection{Fuzzing session (or "Fuzzing session, metrics and bug triage?")}
+
+\matteo{Most of the things you say here explain how fuzzing works better than you explained at the start of 2.1; maybe you can expand that with this information and remove this subsection.}
+
 A \textit{fuzzing session} defines the process of testing a program using a fuzzing tool.
 Assuming the program has been properly compiled using the chosen fuzzer, the first step is to simply start the fuzzing session and let the fuzzer execute the program on many different testcases. After some time, when either the initial corpus has been exhausted (mutation-based) or the fuzzer learned what is an acceptable inputs (generation-based), it starts applying random operations to generate new testcases. 
 
@@ -188,6 +200,11 @@ To conclude, UBSan adds a trivial overhead, increasing execution times by an ave
 
 
 \subsection{Valgrind}
+
+\matteo{Valgrind is a DBI, not a sanitizer. On top of valgrind, memcheck was developed. memcheck is a tool that performs binary sanitization (I.e. it checks some property at run-time).}
+
+\matteo{When you describe something done from others, I suggest you to open the main page of their site and read the description they give; start from there, especially if you are not familiar with the topic. For example, the site for valgrind says: "Valgrind is an instrumentation framework for building dynamic analysis tools. There are Valgrind tools that can automatically detect many memory management and threading bugs, and profile your programs in detail. You can also use Valgrind to build new tools."}
+
 The Valgrind tool is a binary-level sanitizer, more specifically a Dynamic Binary Instrumentation (DBI) framework that performs code analysis at run-time, capable of achieving full coverage of user-mode code. \cite{Valgrind_1} \cite{Valgrind_2} It allows code profiling and memory analysis, with similar functionality to ASan and MSan, and provides several tools that can be used to debug the executed program.
 
 The tool relies on dynamic binary recompilation to load the client program into the \textit{Valgrind Core} and (re)compile the client's machine code in small blocks using a "Just-In-Time" (JIT) approach, producing a so-called "Intermediate Representation" (IR) which is then instrumented with analysis code. This translated code is then stored in a code cache, so that it can be rerun when necessary avoiding this overhead. It is also capable of monitoring the CPU registers during the program execution by taking control of the real CPU and (conceptually) running the client program on a simulated one, and the concept of "shadow memory" is used to analyze and protect both memory and CPU registers.
