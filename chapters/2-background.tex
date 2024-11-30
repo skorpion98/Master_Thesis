@@ -27,24 +27,12 @@ We mainly define 3 types of fuzz testing:
 
 This work focused on the third methodology.
 
-\begin{figure}[h]
-\makebox[\textwidth][c]{\includegraphics[width=0.665\paperwidth]{foto/how_fuzzer_works.jpg}}
-\caption{Simplified fuzzing workflow}
-\label{fig:fuzzer_workflow}
-\end{figure}
-
 \matteo{Here you say that "interesting behaviors" are crashes, then you say that "interesting behaviors" are used to detect coverage. Let's be clear: an "interesting input" might be defined as an input that produces new coverage. That input is going to be mutated further to hopefully get even more coverage and so on. Then, some input trigger crashes: these crashes are reported to the user, but those input are not going to be mutated further.}
 
 The main concept of fuzzing revolves around testing a program on many (seemingly) random inputs over several \textit{fuzzing sessions}, each time discovering a bit more about the structure of the program, and then use this knowledge to create new testcases that attempt to trigger previously unseen execution paths and bugs: when an interesting behavior is observed (i.e. crash, assertion, bugs, ...), the related input is reported to the user and saved for future operations, described in the following paragraphs. 
 Each fuzzing session usually takes several hours or days to produce meaningful results; however, because this technique is mostly based on randomness, it also means that results may vastly differ between sessions, even across tests using the same configuration and resources. For this reason, multiple sessions are necessary before a conclusion regarding the safety of the program can be reached.
 
 To determine whether or not a particular testcase resulted in interesting behavior, one of the most popular techniques to analyze its impact is \textit{code coverage}: this metric represents a percentage that defines how much of the source code has been executed during a single fuzzing session, with the assumption that a high value means that most of the code has already been explored and there is a lower chance of having undetected bugs.
-
-\begin{figure}[h]
-\makebox[\textwidth][c]{\includegraphics[width=0.6\paperwidth]{foto/cfg.png}}
-\caption{Example of a simple program represented using a CFG}
-\label{fig:cfg}
-\end{figure}
 
 This is usually done by creating a "Control Flow Graph" (CFG) of the program, i.e. a representation in graph notation of all paths available during a single execution flow, and measuring: how many nodes (basic blocks) and edges (jumps) were traversed, the number of functions triggered and the branches activated during conditional statements.
 Therefore, we define \textit{interesting input} to be any testcase that increases the code coverage achieved and/or triggers a bug during its execution, and it will also be used as reference during the generation of new testcases.
@@ -58,11 +46,6 @@ Therefore, we define \textit{interesting input} to be any testcase that increase
 \subsection{What is a fuzzer}  \label{fuzzers}
 A \textit{fuzzer} is the tool performing fuzz testing, taking as inputs the program being tested and a set of testcases that will be used during the fuzzing session. It is responsible for executing the program against all the provided inputs, analyze each execution and produce new and useful testcases for future fuzzing session.
 
-\begin{figure}[h]
-\makebox[\textwidth][c]{\includegraphics[width=0.6\paperwidth]{foto/fuzzing_steps.png}}
-\caption{Detailed steps performed by a fuzzer}
-\label{fuzzing_steps}
-\end{figure}
 
 In general, a fuzzer is composed by the following key elements. \cite{afl_docs}
 
