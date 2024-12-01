@@ -12,11 +12,9 @@ Concludes a thorough description of the modern automated testing infrastructures
 
 \section{Fuzz Testing}
 
-\matteo{Same thing as before about automated testing; automated testing is just a way of saying that the testing is done autonomously (i.e. there is no person behind a screen doing stuff). It doesn't say anything about the involved technique itself (it might be fuzzing, it might be symbolic execution, it might be a monkey pressing random keys etc...)}
+One of the most popular approaches to testing a program is \textit{automated testing}, where developers rely on scripts and specifications passed to an external software that automatically performs tests over long periods of time without human supervision. It is particularly useful to formalize repetitive tasks into automated operations with high scalability, accuracy, consistency and fast execution times, although manual assessment is still required to ensure the correctness of the operations performed. 
 
-One of the most popular approaches to testing a program is \textit{automated testing}, which involves the use of a software separate from the one being tested to control its execution flow and analyze the results obtained, comparing the actual results with the expected ones. It is particularly useful to formalize repetitive tasks into automated operations with high scalability and fast execution times, although manual assessment is still required to ensure the correctness of the operations performed. 
-
-Among automated testing techniques, \textit{fuzz testing} (or \textit{fuzzing}) became increasingly popular and widely used due to its ability to trigger crashes, assertions, memory leaks and undefined behavior. This allows developers to test their programs for so called "corner-cases", meaning situations hard or complex to reproduce when the program is being properly used, that could lead to unexpected and/or unwanted behavior exploitable by malicious people and therefore should be handled properly. It also allows for great flexibility, as this technique can be applied to an entire binary or smaller portions of code, introducing specific testing functions.
+Among automated testing techniques, \textit{fuzz testing} (or \textit{fuzzing}) became increasingly popular and widely used due to its ability to trigger crashes, assertions, memory leaks and undefined behavior. This allows developers to test their programs for so-called "corner-cases", i.e. situations hard or complex to reproduce when the program is being properly used, that could lead to unexpected and/or unwanted behavior exploitable by malicious people. It also provides great flexibility, as this technique may be applied to an entire binary or to smaller portions of code.
 
 We mainly define 3 types of fuzz testing:
 \begin{itemize}
@@ -27,39 +25,41 @@ We mainly define 3 types of fuzz testing:
 
 This work focused on the third methodology.
 
-\matteo{Here you say that "interesting behaviors" are crashes, then you say that "interesting behaviors" are used to detect coverage. Let's be clear: an "interesting input" might be defined as an input that produces new coverage. That input is going to be mutated further to hopefully get even more coverage and so on. Then, some input trigger crashes: these crashes are reported to the user, but those input are not going to be mutated further.}
-
-The main concept of fuzzing revolves around testing a program on many (seemingly) random inputs over several \textit{fuzzing sessions}, each time discovering a bit more about the structure of the program, and then use this knowledge to create new testcases that attempt to trigger previously unseen execution paths and bugs: when an interesting behavior is observed (i.e. crash, assertion, bugs, ...), the related input is reported to the user and saved for future operations, described in the following paragraphs. 
+The main concept of fuzzing revolves around testing a program on many (seemingly) random inputs over several \textit{fuzzing sessions}, each time discovering a bit more about the structure of the program, and then use this knowledge to create new testcases that attempt to trigger previously unseen execution paths and bugs: when an unexpected behavior is observed (i.e. crash, assertion, bugs, ...), the related input is reported to the user and saved for bug analysis, described in the following paragraphs. 
 Each fuzzing session usually takes several hours or days to produce meaningful results; however, because this technique is mostly based on randomness, it also means that results may vastly differ between sessions, even across tests using the same configuration and resources. For this reason, multiple sessions are necessary before a conclusion regarding the safety of the program can be reached.
 
-To determine whether or not a particular testcase resulted in interesting behavior, one of the most popular techniques to analyze its impact is \textit{code coverage}: this metric represents a percentage that defines how much of the source code has been executed during a single fuzzing session, with the assumption that a high value means that most of the code has already been explored and there is a lower chance of having undetected bugs.
-
-This is usually done by creating a "Control Flow Graph" (CFG) of the program, i.e. a representation in graph notation of all paths available during a single execution flow, and measuring: how many nodes (basic blocks) and edges (jumps) were traversed, the number of functions triggered and the branches activated during conditional statements.
-Therefore, we define \textit{interesting input} to be any testcase that increases the code coverage achieved and/or triggers a bug during its execution, and it will also be used as reference during the generation of new testcases.
+One of the most popular techniques to determine whether a particular test case was useful or not towards the final results is to analyze \textit{code coverage}: this metric represents a percentage that defines how much of the source code has been executed during a single fuzzing session, with the assumption that a high value means that most of the code has already been explored and there is a lower chance of having undetected bugs. This is usually done by creating a "Control Flow Graph" (CFG) of the program, i.e. a representation in graph notation of all paths available during a single execution flow, and measuring: how many nodes (basic blocks) and edges (jumps) were traversed, the number of functions triggered and the branches activated during conditional statements.
+Therefore, we define \textit{interesting input} to be any testcase that increases the code coverage achieved in a fuzzing session, and it will be used as reference during the generation of new testcases to hopefully get even more coverage.
 
 
-
-
-
-
-\newpage
 \subsection{What is a fuzzer}  \label{fuzzers}
 A \textit{fuzzer} is the tool performing fuzz testing, taking as inputs the program being tested and a set of testcases that will be used during the fuzzing session. It is responsible for executing the program against all the provided inputs, analyze each execution and produce new and useful testcases for future fuzzing session.
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.35]{foto/fuzzing_workflow.png}
+\caption{General fuzzing workflow \cite{fuzzing_survey}}
+\label{fig:fuzzing_workflow}
+\end{figure}
 
+In general, a fuzzer is composed by the following key elements \cite{afl_docs} \cite{fuzzing_survey}.
 
-In general, a fuzzer is composed by the following key elements. \cite{afl_docs}
+\textbf{Target program.}\ \ \ Refers to the program that is being tested: it could be either binary or source code, although source code of real-world software is usually not accessible.
 
-\textbf{Observer.}\ \ \ Provides information observed during the execution of a program to the fuzzer. Such information may be relatively simple, like the total running time for a test and its output, to more advanced ones, like the maximum depth of the stack. They are usually not preserved across many execution, unless an "interesting input" is encountered, in which case they are relayed to other nodes to improve future fuzzing sessions. 
+\textbf{Observer (or Monitor).}\ \ \ Provides runtime information observed during the execution of the target to the fuzzer, leveraging techniques such as code instrumentation, taint analysis, code coverage and many more. Such information may be relatively simple, like the total running time for a test and its output, to more advanced ones, like the maximum depth of the stack. They are usually not preserved across many execution, unless an "interesting input" is encountered, in which case they are relayed to the \textit{Test case generator}  to be used as reference during the generation of new testcases. 
 
 \textbf{Executor.}\ \ \ Responsible for defining how the program will be executed and the arguments passed on each run. The input for a single test is provided either by writing it in some specific memory location or passed as argument to a so called "harness function", although each fuzzer has its own implementation of this element. Given this, we briefly mention few standard functionalities that compose this element. The \textit{InProcessExecutor} runs the "harness function" and provides crash detection. The \textit{ForkServerExecutor} is responsible for spawning different child processes to fuzz. The \textit{TimeoutExecutor} wraps and installs a timeout for another running executor.
 
-\textbf{Feedback.}\ \ \ Classifies the result of a single execution and determines if the initial input is "interesting" or not analyzing the information received from the observers and the updated coverage map. It's also possible to define several of these elements, each one with its own objective (crashes, timeouts, new execution flows discovered), and combine them in boolean expression to collect more fine-grained results.
+\textbf{Test case generator.}\ \ \ Performs generation of new testcases to increase code coverage using runtime information received from the observer and \textit{interesting inputs} as reference. This may be done either via \textit{mutation} or \textit{generation}, depending on the type of fuzzer chosen (discussed later).
 
-\textbf{Input.}\ \ \ Data taken from an external source and provided to the tested program to observe its behavior, usually in the form of bytes arrays. The first fuzzing session takes a set of inputs that is defined and provided by the developer itself, while future fuzzing session will also rely on previously discovered "interesting inputs". 
+\textbf{Feedback.}\ \ \ Chain of components that classify the result of a single execution and determine if the initial input is "interesting" or not analyzing the information received from the observers and the updated coverage map. Some examples shown in figure \ref{fig:fuzzing_workflow} are the \textit{Bug Detector}, that collects and analyze debug information during crashes and errors, and the \textit{Bug Filter}, which classifies the errors collected.
+Each component of this chain usually has its own objective (crashes, timeouts, new execution flows discovered, assertions), and combining them in boolean expression allows the developer to collect more fine-grained results and maximize a desired target function.
 
-\textbf{Testcase.}\ \ \ Defined as an input and a set of related metadata, like ID, description and expected results.
+\textbf{Testcase.}\ \ \ Data taken from an external source and provided as input to the tested program to observe its behavior, usually in the form of bytes arrays. Each testcase is defined by a set of metadata like ID, description and expected results. The first fuzzing session takes a set of inputs that is defined and provided by the developer itself, while future fuzzing session will also rely on previously discovered "interesting inputs". 
 
-\textbf{Corpus.}\ \ \ Location where testcases are stored, usually disk or memory. An example of input corpus may be composed by several testcases with the same properties, like crashing the program under a specific situation. An example of output corpus may be composed by all the testcases that are considered "interesting".
+\textbf{Corpus.}\ \ \ Location where testcases are stored, usually disk or memory. An example of input corpus may be composed by several testcases with the same properties, like crashing the program under a specific situation. An example of output corpus may be composed by all the testcases that are considered "interesting" or a collection of all inputs that triggered a bug in the program.
+
+
+
 
 
 
@@ -77,20 +77,7 @@ A \textit{gray-box fuzzer} attempts to find a balance between efficiency and eff
 
 
 
-
 \newpage
-
-\matteo{We used AFL++, not AFL. Maybe you can say that modern fuzzers come from a solution that represented a breakthrough in the fuzzing research (AFL), then say something about, and finally say that this was 10-15 years ago (check it maybe?) and since then other (more precise) solutions have been proposed; AFL++ is one of those and is actually considered the sate-of-the-art solution for fuzzing.}
-
-\matteo{btw, you did not fuzz in this thesis; as far as we know the testcases might be generated with who knows what fuzzers.}
-
-Given all this information, this thesis focused on performing \textit{file format gray-box testing} using the current state-of-the-art fuzzer called \textit{American Fuzzy Lop} (also known as \textit{AFL} \cite{AFL}), defined as a "dumb mutation-based fuzzer". Among the many results achieved by this tool, there are two honorable mentions. In September 2014, AFL discovered "Shellshock" \cite{shellshock} (also known as "Bashdoor"), a family of security bugs affecting the Unix Bash shell that allowed malicious users to execute arbitrary commands without confirmation. In April 2015, AFL discovered the famous "Heartbleed" \cite{heartbleed} bug in OpenSSL, which allowed malicious users to decipher the otherwise encrypted communications used by the TLS protocol. 
-
-
-\subsection{Fuzzing session (or "Fuzzing session, metrics and bug triage?")}
-
-\matteo{Most of the things you say here explain how fuzzing works better than you explained at the start of 2.1; maybe you can expand that with this information and remove this subsection.}
-
 A \textit{fuzzing session} defines the process of testing a program using a fuzzing tool.
 Assuming the program has been properly compiled using the chosen fuzzer, the first step is to simply start the fuzzing session and let the fuzzer execute the program on many different testcases. After some time, when either the initial corpus has been exhausted (mutation-based) or the fuzzer learned what is an acceptable inputs (generation-based), it starts applying random operations to generate new testcases. 
 
@@ -103,6 +90,12 @@ Finally, the developer has to analyze all the inputs that caused a bug and perfo
 
 All these steps are repeated across many different fuzzing sessions, sometimes even changing the scope of the tests to increase code coverage or stressing the program with many buggy inputs, each time making the program more secure against vulnerabilities and more robust to extraneous inputs. 
 
+In conclusion, many modern fuzzers originate from a solution that represented a breakthrough in fuzzing research called \textit{American Fuzzy Lop} (also known as \textit{AFL} \cite{afl}), a "dumb mutation-based fuzzer" that achieved many results over the years: in September 2014 it discovered "Shellshock" \cite{shellshock} (also known as "Bashdoor"), a family of security bugs affecting the Unix Bash shell that allowed malicious users to execute arbitrary commands without confirmation, while in April 2015 it discovered the famous "Heartbleed" \cite{heartbleed} bug in OpenSSL, which allowed malicious users to decipher the otherwise encrypted communications used by the TLS protocol.
+Since 2017, when the development of this tool was stopped, there have been many variants and improvements of this tool, and some honorable mentions are WinAFL \cite{winafl}, VUzzer \cite{vuzzer}, FairFuzz \cite{fairfuzz}, Fuzzolic \cite{fuzzolic} and QSYM \cite{qsym}. This thesis focused on AFL++ \cite{AFL++}, a direct fork of AFL with new and better mutation and coverage algorithms, which is considered to be the current state-of-the-art fuzzer.
+
+
+
+
 
 
 
@@ -110,7 +103,7 @@ All these steps are repeated across many different fuzzing sessions, sometimes e
 \section{Sanitizers} \label{sanitizers}
 A \textit{code sanitizer} is a tool used to detect bugs in a program during both compilation and runtime, with different sanitizers specializing in detecting different kinds of bugs: misuse of addresses, stack- and heap-overflows, use of uninitialized memory and leaks as well as undefined behavior.
 
-They are added to a program through "instrumentation", which refers to modifying either the source code or the binary code to introduce some additional functionalities and references that can be used by other tools to perform code analysis, logging or profiling. Although code sanitizers should be a standard practice in the development cycle of a program, unfortunately this is not the case as introducing these tools not only requires extensive tests to check for potential errors, but also because they do not always interact very well with shared libraries or other external dependencies. It is also extremely important to mention that these bug detection tools are not meant to be linked against production executables, as their runtime was not developed with security-sensitive constraints and may compromise the security of the released product. \cite{asan_docs}\cite{msan_docs}\cite{ubsan_docs}
+They are added to a program through "instrumentation", which refers to modifying either the source code or the binary code to introduce some additional functionalities and references that can be used by other tools to perform code analysis, logging or profiling. Although code sanitizers should be a standard practice in the development cycle of a program, unfortunately this is not the case as introducing these tools not only requires extensive tests to check for potential errors, but also because they do not always interact very well with shared libraries or other external dependencies. It is also extremely important to mention that these bug detection tools are not meant to be linked against production executables, as their runtime was not developed with security-sensitive constraints and may compromise the security of the released product \cite{asan_docs}\cite{msan_docs}\cite{ubsan_docs}.
 
 A \textit{compile sanitizer} is a tool that performs instrumentation at compile-time, meaning that it introduces functions and libraries that will be then added and compiled together with the original source code, effectively altering its default behavior. Their advantages are twofold: they are able to achieve full coverage and provide warnings and errors during the compilation process, since the analysis is performed directly on the source code and includes all possible paths, and they are also able to detect errors during the execution of the program, although obviously limited by the single execution flow analyzed. However, these sanitizers introduce a non-trivial overhead both in terms of increased compile time, execution time and memory usage, which may cause problems when it comes to managing computing resources.
 
@@ -143,7 +136,7 @@ The management of the shadow memory is done by ASan run-time library, containing
 
 This sanitizer is also provided with another component called \textit{Leak Sanitizer} (or \textit{LSan}), a memory leak detector enabled by default that returns which portions of the program are leaking memory as well as the size leaked, thanks to comprehensive and exhaustive stack traces. A memory leak is a condition where a program fails to release memory that is no longer needed due to developers' negligence or software error, effectively reducing the amount of memory available by the machine, and this will inevitably lead to performance degradation (trashing). Although this component may seem very helpful, it usually generate huge logs especially when having complex programs that heavily rely on external libraries, which oftentimes do not perform clean releases of the objects used.
 
-Finally, ASan adds a slight overhead, increasing execution times by an average 170\% and memory usage by 3.4x. \cite{serebryany2012addresssanitizer}
+Finally, ASan adds a slight overhead, increasing execution times by an average 170\% and memory usage by 3.4x \cite{serebryany2012addresssanitizer}.
 
 
 
@@ -165,7 +158,7 @@ Given that UUM bugs are notoriously hard to reproduce and debug, MSan provides t
 
 The management of the shadow memory is done by MSan run-time library, that maps the "shadow" and (optional) "origin" areas and marks as uninitialized any new allocated regions as well as the deallocated ones. To update the shadow region, a large subset of the standard \verb|libc| functions are intercepted.
 
-Fixing these bugs generally requires little to none effort, but many developers avoid this sanitizer due to the huge slowdown that it introduces. In fact, MSan increases execution times by an average 300\% and memory usage by 2x on short programs, values that rapidly worsen with complex programs. \cite{stepanov2015memorysanitizer}
+Fixing these bugs generally requires little to none effort, but many developers avoid this sanitizer due to the huge slowdown that it introduces. In fact, MSan increases execution times by an average 300\% and memory usage by 2x on short programs, values that rapidly worsen with complex programs \cite{stepanov2015memorysanitizer}.
 
 
 
@@ -178,23 +171,18 @@ Common operations that may lead to undefined behaviors are: array subscription o
 
 This sanitizer works similarly and sometimes overlaps with ASan, putting protected regions around buffers and inserting correctness-checking functions after all mathematical, logical and implicit/explicit cast operations. By default, due to its simplistic nature, the tool does not print stack-traces and uses a minimal run-time library, although the "print-stacktrace-mode" option can be enabled to obtain more comprehensive results.
 
-To conclude, UBSan adds a trivial overhead, increasing execution times by an average 120\% and memory usage by 2x. \cite{ubsan_docs}
+To conclude, UBSan adds a trivial overhead, increasing execution times by an average 120\% and memory usage by 2x \cite{ubsan_docs}.
 
 
 
 \subsection{Valgrind}
+Valgrind is a Dynamic Binary Instrumentation (DBI) framework for building dynamic analysis tools, i.e. tools that perform code analysis at runtime, and is capable of achieving full coverage of user-mode code. It is distributed with seven production-quality tools that perform code profiling, memory analysis and threading bugs, with similar functionality to ASan and MSan \cite{valgrind_web}.  
 
-\matteo{Valgrind is a DBI, not a sanitizer. On top of valgrind, memcheck was developed. memcheck is a tool that performs binary sanitization (I.e. it checks some property at run-time).}
+The tool relies on dynamic binary recompilation to load the client program into the \textit{Valgrind Core} and (re)compile the client's machine code in small blocks using a "Just-In-Time" (JIT) approach, producing a so-called "Intermediate Representation" (IR) which is then instrumented with analysis code. This translated code is then stored in a code cache, so that it can be rerun when necessary avoiding this overhead. It is also capable of monitoring the CPU registers during the program execution by taking control of the real CPU and (conceptually) running the client program on a simulated one, and the concept of "shadow memory" is used to analyze and protect both memory and CPU registers \cite{Valgrind_1} \cite{Valgrind_2}.
 
-\matteo{When you describe something done from others, I suggest you to open the main page of their site and read the description they give; start from there, especially if you are not familiar with the topic. For example, the site for valgrind says: "Valgrind is an instrumentation framework for building dynamic analysis tools. There are Valgrind tools that can automatically detect many memory management and threading bugs, and profile your programs in detail. You can also use Valgrind to build new tools."}
+This work relied on Valgrind's memory-analysis tool called \textit{Memcheck} \cite{memcheck_docs}\cite{memcheck_paper}, a memory-error detector for C/C++ program when performing accesses to heap and stack elements, use of uninitialized and undefined values, incorrect allocation and freeing of heap memory, misuse of allocation functions and finally tracking memory leaks. Since most of its functions overlaps with MSan, it was used as a replacement for detecting UUM bugs when analyzing projects that relied heavily on external libraries: this is because, of the compile sanitizers mentioned above, MSan is the only one that requires all libraries linked to the executable to be rebuilt with this sanitizer in order to get meaningful results. However, this process proved to be too cumbersome and beyond the scope of this work, also because most projects used statically linked libraries rather than compiling them from scratch.
 
-The Valgrind tool is a binary-level sanitizer, more specifically a Dynamic Binary Instrumentation (DBI) framework that performs code analysis at run-time, capable of achieving full coverage of user-mode code. \cite{Valgrind_1} \cite{Valgrind_2} It allows code profiling and memory analysis, with similar functionality to ASan and MSan, and provides several tools that can be used to debug the executed program.
-
-The tool relies on dynamic binary recompilation to load the client program into the \textit{Valgrind Core} and (re)compile the client's machine code in small blocks using a "Just-In-Time" (JIT) approach, producing a so-called "Intermediate Representation" (IR) which is then instrumented with analysis code. This translated code is then stored in a code cache, so that it can be rerun when necessary avoiding this overhead. It is also capable of monitoring the CPU registers during the program execution by taking control of the real CPU and (conceptually) running the client program on a simulated one, and the concept of "shadow memory" is used to analyze and protect both memory and CPU registers.
-
-In this work, Valgrind was mainly used as a substitute of MSan to detect UUM bugs when analyzing projects that relied heavily on external libraries: this is because, of the compile sanitizers mentioned above, MSan is the only one that requires all libraries linked to the executable to be rebuilt with this sanitizer in order to get meaningful results. However, this process turned out to be too cumbersome and beyond the scope of this work, also because most projects use statically linked libraries rather than compiling them from scratch.
-
-While this tool is very popular and widely used, it also suffers from a major limitation due to its design choice, which is that it is a single-threaded program: this means that its execution cannot be parallelized and the entire program and its analysis run on a single CPU core and kernel thread. In fact, Valgrind applies an average slowdown of 4x by default, value that can range from 10x up to 100x for CPU-bound programs when other analysis tools are introduced. \cite{Valgrind_1}
+While Valgrind is a very popular and widely used tool, it also suffers from a major limitation due to its design choice, which is that it is a single-threaded program: this means that its execution cannot be parallelized and the entire program and its analysis run on a single CPU core and kernel thread. In fact, Valgrind applies an average slowdown of 4x by default, value that can range from 10x up to 100x for CPU-bound programs when other analysis tools are introduced \cite{Valgrind_1}: for example, the Memcheck tool introduces a slowdown between 20x-30x for most programs \cite{memcheck_docs}.
 
 
 
@@ -205,7 +193,7 @@ While this tool is very popular and widely used, it also suffers from a major li
 The \textbf{Open-Source Software (OSS)} is a computer software developed in a collaborative and public manner, released under a particular license that allows other users to freely use, study, modify and distribute the software and its source code for any purpose: this allows many users to actively participate in the development of a software by proposing changes and new improvements.
 To be eligible as an open-source software, the license's distribution terms must comply with several criteria \cite{osd}: the main concept is to let anyone easily download your program and access its the source code, allowing them also to modify and redistribute the project without additional fees as long as the original code is appropriately credited. 
 
-Given all this, one could argue that making all this information publicly available poses a real threat to security: history has shown us many times that, given enough time and resources, releasing the source code of a program will result in malicious users discovering bugs and vulnerabilities that could have potentially catastrophic consequences.
+Given all this, one could argue that making all this information publicly available poses a real threat to security: history has shown us many times that, given enough time and resources, releasing the source code of a program will result in malicious users discovering bugs and vulnerabilities that could have potentially catastrophic consequences. 
 
 For this reason, we mention some key aspects that should be considered when approaching open-source software.
 

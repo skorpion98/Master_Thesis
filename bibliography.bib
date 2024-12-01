@@ -1,4 +1,4 @@
-@inproceedings {AFL,
+@inproceedings {AFL++,
   author = {Andrea Fioraldi and Dominik Maier and Heiko Ei{\ss}feldt and Marc Heuse},
   title = {{AFL++} : Combining Incremental Steps of Fuzzing Research},
   booktitle = {14th USENIX Workshop on Offensive Technologies (WOOT 20)},
@@ -210,7 +210,7 @@
 @misc{mab,
   author = {{Wikipedia}},
   title = {Multi-Armed Bandit Algorithms},
-  howpublished = {\url{https://en.wikipedia.org/wiki/Multi-armed_bandit/}}
+  howpublished = {\url{https://en.wikipedia.org/wiki/Multi-armed_bandit}}
 }
 
 @misc{unreliable,
@@ -261,4 +261,102 @@
   title={{National Vulnerabilities Database: Vulnerability Categories}},
   author={{NIST NVD}},
   howpublished={https://nvd.nist.gov/vuln/categories}
+}
+
+@article{fuzzing_survey,
+  author={Hongliang Liang and Xiaoxiao Pei and Xiaodong Jia and Wuwei Shen and Jian Zhang},
+  title={Fuzzing: State of the Art},
+  year={2018},
+  cdate={1514764800000},
+  journal={IEEE Trans. Reliab.},
+  volume={67},
+  number={3},
+  pages={1199-1218},
+  url={https://doi.org/10.1109/TR.2018.2834476}
+}
+
+@article{fuzz_proposed,
+  author = {Miller, Barton P. and Fredriksen, Lars and So, Bryan},
+  title = {An empirical study of the reliability of UNIX utilities},
+  year = {1990},
+  issue_date = {Dec. 1990},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  issn = {0001-0782},
+  url = {https://doi.org/10.1145/96267.96279},
+  doi = {10.1145/96267.96279},
+  journal = {Commun. ACM},
+  month = dec,
+  pages = {32–44},
+  numpages = {13}
+}
+
+@misc{memcheck_docs,
+  author = {Valgrind},
+  title = {Memcheck: a memory error detector},
+  howpublished = {\url{https://valgrind.org/docs/manual/mc-manual.html}}
+}
+
+@inproceedings{memcheck_paper,
+  author = {Seward, Julian and Nethercote, Nicholas},
+  year = {2005},
+  month = {01},
+  pages = {17-30},
+  title = {Using Valgrind to Detect Undefined Value Errors with Bit-Precision.},
+  journal = {Proceedings of the USENIX'05 Annual Technical Conference, Anaheim, California, USA}
+}
+
+@misc{afl,
+  title={Technical “whitepaper” for afl-fuzz},
+  author={Zalewski, Michal},
+  howpublished={\url{https://lcamtuf.coredump.cx/afl/technical_details.txt}},
+  year={2014}
+}
+
+@misc{winafl,
+  title={WinAFL GitHub Repository},
+  author={Zalewski, Michal},
+  howpublished={\url{https://github.com/googleprojectzero/winafl}},
+  year={2014}
+}
+
+@inproceedings{vuzzer,
+  title={VUzzer: Application-aware evolutionary fuzzing.},
+  author={Rawat, Sanjay and Jain, Vivek and Kumar, Ashish and Cojocar, Lucian and Giuffrida, Cristiano and Bos, Herbert},
+  booktitle={NDSS},
+  volume={17},
+  pages={1--14},
+  year={2017}
+}
+
+@inproceedings{fairfuzz,
+  title={Fairfuzz: A targeted mutation strategy for increasing greybox fuzz testing coverage},
+  author={Lemieux, Caroline and Sen, Koushik},
+  booktitle={Proceedings of the 33rd ACM/IEEE international conference on automated software engineering},
+  pages={475--485},
+  year={2018}
+}
+
+@article{fuzzolic,
+  title = {FUZZOLIC: Mixing fuzzing and concolic execution},
+  journal = {Computers & Security},
+  pages = {102368},
+  year = {2021},
+  issn = {0167-4048},
+  doi = {https://doi.org/10.1016/j.cose.2021.102368},
+  url = {https://www.sciencedirect.com/science/article/pii/S0167404821001929},
+  author = {Luca Borzacchiello and Emilio Coppa and Camil Demetrescu},
+}
+
+@inproceedings {qsym,
+  author = {Insu Yun and Sangho Lee and Meng Xu and Yeongjin Jang and Taesoo Kim},
+  title = {{QSYM} : A Practical Concolic Execution Engine Tailored for Hybrid Fuzzing},
+  booktitle = {27th USENIX Security Symposium (USENIX Security 18)},
+  year = {2018},
+  isbn = {978-1-939133-04-5},
+  address = {Baltimore, MD},
+  pages = {745--761},
+  url = {https://www.usenix.org/conference/usenixsecurity18/presentation/yun},
+  publisher = {USENIX Association},
+  month = aug
 }
