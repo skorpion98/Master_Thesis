@@ -12,10 +12,11 @@ Concludes a thorough description of the modern automated testing infrastructures
 
 \section{Fuzz Testing}
 
-One of the most popular approaches to testing a program is \textit{automated testing}, where developers rely on scripts and specifications passed to an external software that automatically performs tests over long periods of time without human supervision. It is particularly useful to formalize repetitive tasks into automated operations with high scalability, accuracy, consistency and fast execution times, although manual assessment is still required to ensure the correctness of the operations performed. 
+One of the most popular approaches to testing a program is \textit{automated testing}, where developers rely on scripts and specifications passed to external software or a created toolkit that automatically performs tests over long periods of time without human supervision. It can be divided into \textit{static testing}, which is based on a thorough analysis of the source code and uses techniques like symbolic execution to abstract the program execution , and \textit{dynamic testing}, which aims to execute the program many times with the objective of traversing all possible execution paths. It is particularly useful to formalize repetitive tasks into automated operations with high scalability, accuracy, consistency and fast execution times. Additionally, programmers may prepare and use such pre-programmed tools with minimal costs after an initial effort in developing them, making it a crucial integration for large codebases and making sure that the product meets quality standards before being released. However, manual evaluation is still required and irreplaceable, both to ensure the correctness of the operations performed as well as maintaining and keeping these tools effective and up to date with the software development \cite{automated_testing}. 
 
-Among automated testing techniques, \textit{fuzz testing} (or \textit{fuzzing}) became increasingly popular and widely used due to its ability to trigger crashes, assertions, memory leaks and undefined behavior. This allows developers to test their programs for so-called "corner-cases", i.e. situations hard or complex to reproduce when the program is being properly used, that could lead to unexpected and/or unwanted behavior exploitable by malicious people. It also provides great flexibility, as this technique may be applied to an entire binary or to smaller portions of code.
+Among dynamic automated testing techniques, \textit{fuzz testing} (or \textit{fuzzing}) has become increasingly popular and widespread due to its ability to trigger critical issues such as crashes, assertions, memory leaks and undefined behavior, done by systematically testing the program using random, malformed and unexpected inputs. This allows developers to test their programs for so-called "corner-cases", i.e. situations that are difficult or complex to reproduce when the program is being properly used, but that could lead to unexpected and/or unwanted behavior potentially exploitable by malicious people and therefore should be handled properly. It also provides great flexibility, as this technique can be applied to an entire binary or selected small portions of code, introducing specific testing functions.
 
+\newpage
 We mainly define 3 types of fuzz testing:
 \begin{itemize}
     \item \textbf{application fuzzing:} used for UI elements (such as buttons, input fields) or command-line programs, tests may include high-frequency inputs, providing random/invalid content and inputs exceeding the expected size
@@ -23,20 +24,27 @@ We mainly define 3 types of fuzz testing:
     \item  \textbf{file format fuzzing:} used for programs that accept "structured inputs", i.e. files that have a precise and standard format (like .doc, .jpg), whose structure and content are altered to trigger unwanted behavior
 \end{itemize}
 
-This work focused on the third methodology.
-
 The main concept of fuzzing revolves around testing a program on many (seemingly) random inputs over several \textit{fuzzing sessions}, each time discovering a bit more about the structure of the program, and then use this knowledge to create new testcases that attempt to trigger previously unseen execution paths and bugs: when an unexpected behavior is observed (i.e. crash, assertion, bugs, ...), the related input is reported to the user and saved for bug analysis, described in the following paragraphs. 
 Each fuzzing session usually takes several hours or days to produce meaningful results; however, because this technique is mostly based on randomness, it also means that results may vastly differ between sessions, even across tests using the same configuration and resources. For this reason, multiple sessions are necessary before a conclusion regarding the safety of the program can be reached.
 
-One of the most popular techniques to determine whether a particular test case was useful or not towards the final results is to analyze \textit{code coverage}: this metric represents a percentage that defines how much of the source code has been executed during a single fuzzing session, with the assumption that a high value means that most of the code has already been explored and there is a lower chance of having undetected bugs. This is usually done by creating a "Control Flow Graph" (CFG) of the program, i.e. a representation in graph notation of all paths available during a single execution flow, and measuring: how many nodes (basic blocks) and edges (jumps) were traversed, the number of functions triggered and the branches activated during conditional statements.
-Therefore, we define \textit{interesting input} to be any testcase that increases the code coverage achieved in a fuzzing session, and it will be used as reference during the generation of new testcases to hopefully get even more coverage.
+One of the most popular techniques to determine whether a particular test case was useful or not towards the final results is to analyze \textit{code coverage}: this metric represents a percentage that defines how much of the source code has been executed during a single fuzzing session, with the assumption that a high value means that most of the code has already been explored and there is a lower chance of having undetected bugs coming from already tested execution flows.
+\begin{figure}[h]
+\makebox[\textwidth][c]{\includegraphics[width=0.67\paperwidth]{foto/cfg.png}}
+\caption{CGF taken from a sample binary provided as input to IDA Disassembler \cite{ida}}
+\label{fig:cfg}
+\end{figure}
+
+\newpage
+This is usually done by creating a "Control Flow Graph" (CFG) of the program, i.e. a representation in graph notation of all paths available during a single execution flow: each node in the graph represents a "basic block", i.e. a sequence of instructions or statements with no jumps, and the edges between nodes represent jumps, loops and branch construct (if-else) in the program's execution (see figure \ref{fig:cfg}). By analyzing a single execution flow and measuring the number of nodes and edges traversed, the number of functions triggered, and which branches were activated during conditional statements, the fuzzer keeps track of all paths that have yet to be explored, providing useful information when generating new testcases. 
+
+Therefore, we define \textit{interesting input} as any testcase that increases the code coverage achieved in a fuzzing session, and it is used as a reference when generating new testcases to hopefully get even more coverage.
 
 
 \subsection{What is a fuzzer}  \label{fuzzers}
-A \textit{fuzzer} is the tool performing fuzz testing, taking as inputs the program being tested and a set of testcases that will be used during the fuzzing session. It is responsible for executing the program against all the provided inputs, analyze each execution and produce new and useful testcases for future fuzzing session.
+A \textit{fuzzer} is the tool performing fuzz testing, taking as inputs the program being tested and a set of testcases that will be used during the fuzzing session. It is responsible for executing the program against all the provided inputs in an automated manner, analyze each execution for potential unwanted behavior and produce new and useful testcases for future fuzzing session that will attempt to trigger new execution flows and even more bugs.
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.35]{foto/fuzzing_workflow.png}
+\includegraphics[scale=0.46]{foto/fuzzing_workflow.png}
 \caption{General fuzzing workflow \cite{fuzzing_survey}}
 \label{fig:fuzzing_workflow}
 \end{figure}
@@ -45,11 +53,13 @@ In general, a fuzzer is composed by the following key elements \cite{afl_docs} \
 
 \textbf{Target program.}\ \ \ Refers to the program that is being tested: it could be either binary or source code, although source code of real-world software is usually not accessible.
 
+\textbf{Program's Specification}\ \ \ Some fuzzers can receive as input the program's specification, i.e. a formal description of the target program and its behavior using as the available documentation and source code, and translate its functionalities and expected behavior using a specific grammar that the fuzzer understands. However, this information is rarely available and often too difficult to infer without proper data available.
+
 \textbf{Observer (or Monitor).}\ \ \ Provides runtime information observed during the execution of the target to the fuzzer, leveraging techniques such as code instrumentation, taint analysis, code coverage and many more. Such information may be relatively simple, like the total running time for a test and its output, to more advanced ones, like the maximum depth of the stack. They are usually not preserved across many execution, unless an "interesting input" is encountered, in which case they are relayed to the \textit{Test case generator}  to be used as reference during the generation of new testcases. 
 
 \textbf{Executor.}\ \ \ Responsible for defining how the program will be executed and the arguments passed on each run. The input for a single test is provided either by writing it in some specific memory location or passed as argument to a so called "harness function", although each fuzzer has its own implementation of this element. Given this, we briefly mention few standard functionalities that compose this element. The \textit{InProcessExecutor} runs the "harness function" and provides crash detection. The \textit{ForkServerExecutor} is responsible for spawning different child processes to fuzz. The \textit{TimeoutExecutor} wraps and installs a timeout for another running executor.
 
-\textbf{Test case generator.}\ \ \ Performs generation of new testcases to increase code coverage using runtime information received from the observer and \textit{interesting inputs} as reference. This may be done either via \textit{mutation} or \textit{generation}, depending on the type of fuzzer chosen (discussed later).
+\textbf{Test case generator.}\ \ \ Performs generation of new testcases to increase code coverage using runtime information received from the observer and \textit{interesting inputs} as reference. This can be done using either \textit{mutation} or \textit{generation}, depending on the type of fuzzer chosen (discussed later), although it's important to note that there is no one-size-fits-all solution.
 
 \textbf{Feedback.}\ \ \ Chain of components that classify the result of a single execution and determine if the initial input is "interesting" or not analyzing the information received from the observers and the updated coverage map. Some examples shown in figure \ref{fig:fuzzing_workflow} are the \textit{Bug Detector}, that collects and analyze debug information during crashes and errors, and the \textit{Bug Filter}, which classifies the errors collected.
 Each component of this chain usually has its own objective (crashes, timeouts, new execution flows discovered, assertions), and combining them in boolean expression allows the developer to collect more fine-grained results and maximize a desired target function.
@@ -57,6 +67,8 @@ Each component of this chain usually has its own objective (crashes, timeouts, n
 \textbf{Testcase.}\ \ \ Data taken from an external source and provided as input to the tested program to observe its behavior, usually in the form of bytes arrays. Each testcase is defined by a set of metadata like ID, description and expected results. The first fuzzing session takes a set of inputs that is defined and provided by the developer itself, while future fuzzing session will also rely on previously discovered "interesting inputs". 
 
 \textbf{Corpus.}\ \ \ Location where testcases are stored, usually disk or memory. An example of input corpus may be composed by several testcases with the same properties, like crashing the program under a specific situation. An example of output corpus may be composed by all the testcases that are considered "interesting" or a collection of all inputs that triggered a bug in the program.
+
+
 
 
 
