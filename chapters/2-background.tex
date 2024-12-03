@@ -254,7 +254,7 @@ The \textit{Fuzzing Bots Pool} is a cluster of VMs responsible for running the s
 \end{itemize}
 
 \begin{figure}[h]
-\makebox[\textwidth][c]{\includegraphics[width=0.665\paperwidth]{foto/clusterfuzz_architecture.png}}
+\makebox[\textwidth][c]{\includegraphics[width=0.635\paperwidth]{foto/clusterfuzz_architecture.png}}
 \caption{ClusterFuzz main architecture visualized \cite{clusterfuzz_docs}}
 \label{fig:clusterfuzz_architecture}
 \end{figure}
@@ -264,16 +264,10 @@ Each VM performs these operations inside Docker instances created and uploaded b
 
 
 \subsection{OSS-Fuzz}
+The \textit{OSS-Fuzz Project} \cite{ossfuzz_paper} was founded in 2016 after the famous "Heartbleed" vulnerability was discovered in OpenSSl, one of the most popular open-source projects at the time for encrypting web traffic, as a response to provide developers with free fuzzing and private alerts services for their open-source projects. As of August 2023, it has helped identify and fix more than 10,000 vulnerabilities and 36,000 bugs in over 1000 projects \cite{ossfuzz_docs}.
 
-\matteo{This section gives lots of practical details, that may or may not be useful, but does not say things that could actually be useful, like how long does a fuzzing session last (6 hours if I'm not mistaken, but check it), what seeds are used (this is kind of important, since we are going to analyze the queues), that the queues are actually saved (and re-used), that there multiple fuzzers etc.}
 
-\matteo{I am not saying this is bad overall, I am just saying that you can improve it significantly by giving more useful information; remember that the people who will read this will most likely know close to nothing about fuzzing, they are much more interested in knowing how fuzzing is deployed here than knowing that there is a script called "build.sh" that performs automatic building.}
-
-The \textit{OSS-Fuzz Project} \cite{ossfuzz_paper} was created in 2016 after the famous "Heartbleed" vulnerability was discovered in OpenSSl, one of the most popular open-source projects at the time for encrypting web traffic, as a response to provide developers with free fuzzing and private alerts services for their open-source projects.
-While it was initially intended for languages that are not memory-safe (C/C++), it is now capable to provide support for other popular languages such as Python, Go, Java and Rust.  
-
-As of August 2023, it helped identify and fix over 10.000 vulnerabilities and 36.000 bugs across over 1000 projects. \cite{ossfuzz_docs}.
-Projects can be tested using several fuzzing engines (such as LibFuzzer, AFL++, Honggfuzz and Centipede) in combination with Google Sanitizers (ASan, MSan and UBSan), while \textit{ClusterFuzz} acts as the back-end and reporting tool.
+While it was initially intended for languages that are not memory-safe (C/C++), it was later extended to provide support also for other popular languages such as Python, Go, Java and Rust. Projects can be tested using several coverage-guided mutation-based fuzzing engines (such as LibFuzzer, AFL++ and Honggfuzz) in combination with Google Sanitizers (ASan, MSan and UBSan), while \textit{ClusterFuzz} acts as the back-end and provides bug reporting functionalities.
 
 \begin{figure}[h]
 \makebox[\textwidth][c]{\includegraphics[width=0.65\paperwidth]{foto/oss-fuzz_architecture.png}}
@@ -281,44 +275,32 @@ Projects can be tested using several fuzzing engines (such as LibFuzzer, AFL++, 
 \label{fig:ossfuzz_architecture}
 \end{figure}
 
-The architecture is structured as follows:
-Initially, the maintainer of an open-source project creates one or more "fuzz targets" that will be integrated with the project's build and test systems. \cite{libfuzzer_docs}
+The workflow is as follows. First, the maintainers of an open-source project create one or more "fuzz targets" that are integrated into the project's build and test system \cite{libfuzzer_docs}, where a "fuzz target" defines a function that takes an input (in this thesis, an array of bytes) and performs some operations on said to test a specific API or program's functionality. Developers are also expected to provide up-to-date corpus seeds, that will be used by the chosen fuzzers for cross-mutations and improve the fuzz target’s coverage. All these resources, along with instructions on how to build and fuzz the targets, are uploaded to a Google Cloud Service Bucket, a file-hosting service acting as a middle point between OSS-Fuzz and its fuzzing back-end ClusterFuzz.
 
-A "fuzz target" is essentially a function that accepts an input, in this case an array of bytes, and perform some operations with these bytes to test a specific API.
+Then, a project's fuzzing session lasts (at most) 6 hours, evenly distributed across all fuzz targets with a minimum of 10 minutes per fuzz target, and \textit{ensemble fuzzing} is used when binaries are configured for multiple fuzzing engines (see figure \ref{fig:continuous_fuzzing}). Both the corpora used as input to the tests and the corpora produced as results of a successful fuzzing session (also called \textit{queues}) are publicly available and stored in the project's Google Cloud for research purposes and \textit{regression testing}, i.e. testing a program against old inputs to ensure that previously tested functionality still works as intended and that fixed bugs do not reappear.
 
-Although not all projects are expected to implement and maintain their targets in the same way, developers can refer to a guide of recommendations to increase the efficiency and quality of the automated fuzzing tests performed.
-To briefly summarize them, they should:
-\begin{itemize}
-    \item maintain the source code and targets' build system using some versioning service (like Git)
-    \item allow each fuzz target to be compiled with Sanitizers
-    \item avoid modular build systems for the fuzz targets (compile all or nothing) and use general-scope compile flags
-    \item provide a seed corpus that is regularly updated and extended with new "interesting inputs", also it should have good coverage
-    \item provide a dictionary of tokens to instruct the fuzzer on the correct syntax of the inputs, if applicable
-    \item periodically check the performances achieved by each fuzz target, meaning their coverage, time spent on execution and solving abrupt errors
-\end{itemize}
+Finally, any bug discovered is reported to the OSS-Fuzz issue tracker \cite{ossfuzz_bugtracker}, which uses the metadata sent by ClusterFuzz to create its report. Developers have 3 ways of dealing with this situation: they can commit new changes to fix the bug (verified by ClusterFuzz before closing an issue), assign the tag "WontFix" to the bug and notify that it will not be solved, or simply ignore it altogether. 
+
 
 
 \newpage
-To be accepted by OSS-Fuzz, a project must be relevant and/or critical to the global IT infrastructure and it must have a significant user base.
-To check if your project is eligible for OSS-Fuzz, Google provides a mathematical formula to calculate the "Open-Source Project Criticality Score" \cite{score} in a range between 0 \textit{(least critical)} and 1 \textit{(most critical)}:
-\ \\ 
+To be accepted by OSS-Fuzz, a project must be relevant and/or critical to the global IT infrastructure and it must have a significant user base: to check if your project is eligible, Google provides a mathematical formula to calculate its "Open-Source Project Criticality Score" \cite{score} in a range between 0 \textit{(least critical)} and 1 \textit{(most critical)}, where $\alpha_i$ refers to the "weight" of an indicator and $T_i$ to its maximum allowed value:
 
 \begin{equation}
     CriticalityScore = \frac{1}{\sum \alpha_i}\  \sum_i \alpha_i \ \frac{\log(1+S_i)}{\log(1+\max(S_i,T_i))}
 \end{equation}
-where $\alpha_i$ refers to the "weight" of an indicator and $T_i$ its maximum allowed value.
-
+\ \\
 The parameters evaluated are the followings:
 \begin{itemize}
-    \item \textbf{created-since} ($\alpha_i = 1$, $T_i = 120$): months since the project was created, older projects have higher chances of being widely used or being dependent upon
-    \item \textbf{updated-since} ($\alpha_i = -1$, $T_i = 120$): months since the project was last updated, unmaintained projects with no recent commits have higher chance of being less relied upon
-    \item \textbf{contributor-count} ($\alpha_i = 2$, $T_i = 5000$): count of commits made by project contributors, different contributors involvement indicates project's importance
-    \item \textbf{org-count} ($\alpha_i = 1$, $T_i = 10$): count of distinct organizations contributing to the project, indicates cross-organization dependency
-    \item \textbf{commit-frequency} ($\alpha_i = 1$, $T_i = 1000$): average number of commits per week in the last year, code that changes constantly means higher susceptibility to vulnerabilities
-    \item \textbf{recent-releases-count} ($\alpha_i = 0.5$, $T_i = 26$): number of releases in the last year, frequent releases indicates user dependency
-    \item \textbf{closed-issues-count} ($\alpha_i = 0.5$, $T_i = 5000$): number of issues closed in the last 90 days, indicates contributor involvement and focus on closing user issues
+    \item \textbf{created-since} ($\alpha_i = 1$, $T_i = 120$): months since the project was created, older projects have a higher chance of being widely used or dependent on
+    \item \textbf{updated-since} ($\alpha_i = -1$, $T_i = 120$): months since the project's last update, unmaintained projects with no recent commits have a higher chance of being less relied upon
+    \item \textbf{contributor-count} ($\alpha_i = 2$, $T_i = 5000$): number of commits made by project contributors, involvement of different contributors indicates a project importance
+    \item \textbf{org-count} ($\alpha_i = 1$, $T_i = 10$): number of distinct organizations contributing to the project, indicates cross-organization dependency
+    \item \textbf{commit-frequency} ($\alpha_i = 1$, $T_i = 1000$): average number of commits per week over the last year, code that is constantly changing may be more susceptible to vulnerabilities
+    \item \textbf{recent-releases-count} ($\alpha_i = 0.5$, $T_i = 26$): number of releases in the last year, frequent releases indicate user dependency
+    \item \textbf{closed-issues-count} ($\alpha_i = 0.5$, $T_i = 5000$): number of issues closed in the last 90 days, indicates contributor involvement and focus on resolving user issues
     \item \textbf{updated-issues-count} ($\alpha_i = 0.5$, $T_i = 5000$): number of issues updated in the last 90 days, indicates high contributor involvement
-    \item \textbf{comment-frequency} ($\alpha_i = 1$, $T_i = 15$): average number of comments per issue in the last 90 days, indicates  user activity and dependence
+    \item \textbf{comment-frequency} ($\alpha_i = 1$, $T_i = 15$): average number of comments per issue in the last 90 days, indicates user activity and dependence
     \item \textbf{dependents-count} ($\alpha_i = 2$, $T_i = 500000$): number of project mentions in the commit messages, indicates repository use
 \end{itemize}
 \ \\
@@ -326,50 +308,30 @@ Only projects scoring a value $\geq 0.7$ may be eligible to be integrated in the
 
 
 \newpage
-Assuming your project satisfies the score requirements, developers issue a "pull request" on the OSS-Fuzz repository providing the following 3 files.
-The \textit{project.yaml} configuration file stores project metadata needed by OSS-Fuzz to correctly provide its services, and some of the most commons are:
+Assuming your project satisfies the score requirements, developers issue a "pull request" on the OSS-Fuzz repository providing the following 3 files, which are periodically checked and validated by a bot before accepting/rejecting them.
+
+\paragraph{project.yaml} Configuration file that contains metadata regarding who owns the project, how to contact them when filing bug reports, and configuration parameters about the fuzzing sessions, needed by OSS-Fuzz to correctly provide its services.
+Some of the most common information reported are:
 \begin{itemize}
-    \item \textbf{homepage:} url to the project's homepage
+    \item \textbf{homepage:} URL to the project homepage
     \item \textbf{language:} programming language used to write the project (C, C++, Go, Rust, Python, JVM languages, Swift)
-    \item \textbf{primary\_contacts:} list of email addresses that will be automatically CCed on crash reports and fuzzer statistics
-    \item \textbf{main\_repo:} path to the source code repository hosting the project
-    \item \textbf{vendor\_ccs:} \textit{optional}, list of vendors' email addresses that want access to the bug reports
-    \item \textbf{sanitizers:} \textit{optional}, list of sanitizers that are available on the project (address, undefined, memory), if not specified "address" and "undefined" will be used
+    \item \textbf{primary\_contacts:} list of email addresses that are automatically CC'd on crash reports and fuzzer statistics
+    \item \textbf{main\_repo:} path to the source repository where the project is hosted
+    \item \textbf{vendor\_ccs:} \textit{optional}, list of email addresses of vendors who want access to bug reports
+    \item \textbf{sanitizers:} \textit{optional}, list of sanitizers available in the project (address, undefined, memory), if not specified "address" and "undefined" are used
     \item \textbf{architectures:} \textit{optional}, list of architectures that can build the project (supported only x86\_64 and i386)
-    \item \textbf{fuzzing\_engines:} \textit{optional}, list of fuzzing engines available (libfuzzer, afl, honggfuzz and centipede), if not specified "libfuzzer" will be used
+    \item \textbf{fuzzing\_engines:} \textit{optional}, list of available fuzzing engines (libfuzzer, afl, honggfuzz and centipede), if not specified "libfuzzer" is used
     \item \textbf{builds\_per\_day:} \textit{optional}, number of times a project should be built per day, OSS-Fuzz allows up to 4 builds per day and builds once per day by default
 \end{itemize}
-\ \\
-The \textit{Dockerfile} defines a container with all the dependencies and resources needed to build the project and prepare the testing environment.
 
-To avoid having developers create and maintain their own customized Docker containers and create an homogeneous and standard environment, OSS-Fuzz provides several "base images" for each supported language, built on top of Ubuntu 20.04 and with the appropriate compilers and toolchains already installed.
+\paragraph{Dockerfile} To avoid having developers create and maintain their own customized Docker containers and create an homogeneous and standard environment, OSS-Fuzz provides several "base images" based on Ubuntu 20.04 for each supported language, containing the most common compilers and toolchains needed to build the project and prepare the testing environment already installed. Each project builds its own testing environment starting from the most appropriate base image, runs a series of "apt-get" and "git clone" commands to download and install all the necessary packages and dependencies, and finally pulls all the resources and fuzz targets from the project repository.
 
-After pulling the most appropriate base image, there are usually several "apt-get" and "git clone" commands related to downloading and installing all the required packages and dependencies needed to correctly build the project.
-
-Finally, the build script and any other fuzzer files are pulled from the project's repository.
-The \textit{build.sh:} script, executed inside the Docker container, performs all the operations necessary to build the project and the fuzzing targets that will be tested.
-
-In general, the script should build the project and the fuzz targets using the correct compiler and appropriate compiler flags.
-
-To provide a more flexible and accessible build system, the Docker image provides several environment variables regarding directory locations, compilers and compiling flags, allowing developers to easily re-target scripts with little effort.
-On the other end, a bot periodically checks for new requests and validates their content before accepting/rejecting them.
+\paragraph{build.sh} Script that runs inside the Docker container defined above and performs all the operations required to build the project and the fuzzing targets to be tested. To provide a more flexible and accessible build system, all base images are configured with several environment variables regarding directory locations, compilers and compilation flags, allowing developers to easily re-target scripts with little effort.
 
 
-
-Once the project has been accepted as part of the OSS-Fuzz's infrastructure, a "builder" script follows the provided instructions to build the project's fuzz targets and uploads them to a Google Cloud Service Bucket, a file-hosting service.
-
-This acts as a middle point between OSS-Fuzz and ClusterFuzz, which uses the aforementioned bucket to download all the necessary elements to fuzz the project as well as upload the results achieved.
-After a successful fuzzing session, any bug discovered is reported to the OSS-Fuzz issue tracker \cite{ossfuzz_bugtracker}, which uses the metadata sent by ClusterFuzz to create its report. 
-
-Developers have 3 ways of dealing with this situation: they can commit new changes to fix the bug (verified by ClusterFuzz before closing an issue), assign the tag "WontFix" to the bug to notify that it will not be solved, or simply ignore it altogether. 
-Finally, OSS-Fuzz follows a strict \textit{bug disclosure guideline}. \cite{bug_disclosure}
-When a bug is discovered, an automatic email is generated and sent to all email addresses specified in the project, and an issue is opened on the issue tracker.
-
-This email contains the report created using ClusterFuzz, as well as an estimation of the priority and severity of the bug discovered.
-From this moment, the issue will be publicly visible in 90 days or after the fix is released (whichever comes earlier), meaning that anyone will have access to the causing input as well as any other debugging information related to what happened and how to reproduce the bug.
-
-Before the deadline expires, the developers may request a 14-day grace period if the patch is set to be released on a specific day within this extended period, in which case the public disclosure is delayed.
-In any case, Google reserves the right to change deadlines forwards or backwards depending on the circumstances and the severity of the findings.
+\newpage
+To conclude, OSS-Fuzz follows a strict \textit{bug disclosure guideline} \cite{bug_disclosure}.
+When a bug is discovered, an automatic email is generated and sent to all email addresses specified in the "project.yaml" file, and an issue is opened on the issue tracker. This email contains the report created using ClusterFuzz, as well as an estimation of the priority and severity of the bug discovered. From this moment, the issue will be publicly visible in 90 days or after the fix is released (whichever comes earlier), meaning that anyone will have access to the causing input as well as any other debugging information related to what happened and how to reproduce the bug. Before the deadline expires, the developers may request a 14-day grace period if the patch is set to be released on a specific day within this extended period, in which case the public disclosure is delayed. In any case, Google reserves the right to change deadlines forwards or backwards depending on the circumstances and the severity of the findings.
 
 
 \newpage
