@@ -1,13 +1,13 @@
 
 \chapter{Methodology} \label{chap_3}
 \ \\
-The objective of this thesis was to see if there were any overlooked bugs in common fuzzing benchmarks, choosing OSS-Fuzz and FuzzBench as they are among the most popular ones. This, in turn, meant analyzing the effectiveness of such automated testing campaigns and verify how efficiently they were being employed by open-source developers.
+The aim of this thesis was to analyze common automated testing campaigns, specifically OSS-Fuzz and FuzzBench as they are among the most popular ones, to see if there were any overlooked bugs in the projects that were integrated. This, in turn, meant studying their workflow and examining how programs are tested to verify how efficiently such frameworks are used by open-source developers.
 
 What does it mean for a bug to be "overlooked" in this context?
 
-If we think about OSS-Fuzz, where fuzzing is performed automatically by VMs, it means to look for cases where machines failed: this could happen either due to a fault in the automation process or due to the integration choices made by the developers. In the first case, we may talk about limits imposed by OSS-Fuzz on its resources, like tests that cause out-of-memory scenarios, timeouts or even bugs that cannot be reliably and consistently reproduced.  In the second case, it is strictly related to the content of the \textit{project.yaml} configuration file: different sanitizers look for different types of bugs, while each fuzzing engine uses its own set of strategies to test a program, producing results that may be completely different from the other provided fuzzers. For this reason, I focused on the latest public "fuzzing queue" made available by the developers, i.e. the corpus of inputs used by OSS-Fuzz when performing the tests.
+If we think about OSS-Fuzz, where fuzzing is performed automatically by VMs, it means looking for cases where machines have failed: this could happen either due to a fault in the automation process or due to the integration choices made by the developers. In the former case, we may talk about limits imposed by OSS-Fuzz on its resources, like tests that cause out-of-memory scenarios, timeouts or even bugs that cannot be reliably and consistently reproduced (also called \textit{flaky)}. In the latter case, it is strictly related to the content of the \textit{project.yaml} configuration file: different sanitizers look for different types of bugs, while each fuzzing engine uses its own set of strategies to test a program, producing results that may be completely different from the other provided fuzzers. Given this, OSS-Fuzz was analyzed by taking a small selection of projects and testing them locally on the latest version with a fixed combination of fuzzing engine and sanitizers, using the latest public fuzzing queue available on the project's repository as the input corpus. 
 
-If we think about FuzzBench, where projects are actively tested by several different fuzzers, it means to look for bugs discovered in older versions that were not tested on newer ones, which obviously is a human error. A small selection of projects from OSS-Fuzz are tested continuously by several different fuzzers, producing daily reports available both to the fuzzers and the chosen projects developers, along with public access to the corpora used to perform the tests as well as the results and the crashes found (if any). It is then responsibility of the project developers to analyze and fix these bugs, although this does not always happen. For this reason, I focused on analyzing a chosen set of experiments between 2020 and 2024, downloading all the available crashes and testing them on latest version, hoping to find old bugs that have yet to be fixed.
+If we think about FuzzBench, where projects are actively tested by several different fuzzers, it means to look for bugs discovered in older versions that were not tested on newer ones, which obviously is a human error. A small selection of projects from OSS-Fuzz are tested continuously by several different fuzzers, producing daily reports available both to the fuzzers and the chosen projects developers, along with public access to the corpora used to perform the tests as well as the results and the crashes found (if any). It is then responsibility of the project developers to analyze and fix these bugs, although this does not always happen. Given this, FuzzBench was analyzed by testing all available benchmarks and the ones from the SBFT '23 conference (see \ref{conference}), building the projects to their latest version with the same combination of fuzzing engine and sanitizers as OSS-Fuzz, and using as input corpus all the available crashes for each benchmark found in all fuzzing session that are publicly accessible between 2020 and October 2024 (at the moment of testing).
 
 As previously mentioned, all relevant bugs were then appropriately reported to their respective developers.
 
@@ -15,30 +15,19 @@ As previously mentioned, all relevant bugs were then appropriately reported to t
 
 \newpage
 \section{Setting up the environment}
-All tests were performed on two separate machines, both equipped with personal installations of Ubuntu 22.04 LTS, already run-in and used.
+All tests were performed on two separate machines with similar specs, both equipped with personal installations of Ubuntu 22.04 LTS already run-in and used, using the following general-purpose tools:
+\begin{itemize}
+    \item \textit{Docker} \cite{Docker}: virtualization tool used to run the different containers needed by OSS-Fuzz to create the environments where each projects was built and tested
+    \item \textit{Valgrind} \cite{Valgrind_1}\cite{Valgrind_2}: dynamic binary instrumentation (DBI) framework with tools that perform analysis, profiling and management of a program during its execution, used specifically for the "Memcheck" tool when looking for memory-related bugs in fuzz targets built without sanitizers
+    \item \textit{Python} (v. 3.10.12) \cite{python}: needed by OSS-Fuzz to provide its functionalities and used to create several scripts to perform information and web scraping, reports analysis and bug deduplication
+    \item \textit{gsutil} \cite{gsutil}: command-line tool suite provided by Google to remotely access data stored on Google Cloud Service from your local machine, used to analyze FuzzBench experiments and download other resources
+    \item \textit{Google Chrome/Development Driver} \cite{driver}: used during the information scraping phase of this work, discussed in section \ref{selection}
+\end{itemize}
 
+Regarding \textit{OSS-Fuzz}, most of the preparation was done using its GitHub repository, which was cloned locally on both machines. To provide its services, OSS-Fuzz uses several Python scripts that can be invoked from the command line with appropriate arguments: these commands can be used to update the repository and the files used to build each project, update the base images and each project image, build the project image and its fuzzers, and finally download other resources such as reports and publicly available corpora. 
 
-Regarding tools for general purpose, I used Docker, Valgrind, Python 3, gsutil and Google Chrome.
+Regarding \textit{FuzzBench}, most of the preparation was done by incorporating the \textit{gsutil} suite in a Python script that performed web scraping and downloaded content from its Google Cloud bucket, specifically on the section where all experiments results are collected.
 
-The \textit{Docker} \cite{Docker} application run the different containers needed by OSS-Fuzz to build the environment where projects will be built and tested.
-
-\textit{Valgrind} \cite{Valgrind_1}\cite{Valgrind_2} is a dynamic binary instrumentation (DBI) framework to perform analysis, profiling and management of a program during its execution.
-More specifically, it was used to perform memory analysis when projects were built without sanitizers.
-
-The \textit{Python 3} language was used to create several scripts that I used to perform information scraping, reports analysis and bug deduplication.
-It is also used by OSS-Fuzz to provide some functionalities, and this will be discussed later. 
-
-The \textit{gsutil} suite is a command-line tool provided by Google to access resources stored on Google Cloud Service from your local machine, and it was used to analyze the FuzzBench benchmarks and download other resources.
-
-Finally, \textit{Google Chrome} and its "development driver" were needed during the information scraping phase of this work, discussed in section \ref{selection}.
-
-
-Regarding \textit{OSS-Fuzz}, most of the work was done on its GitHub repository, which I cloned locally on both machines.
-To provide its services, OSS-Fuzz uses several python scripts that can be invoked via command-line using appropriate arguments. These commands can be used to update the projects' files and projects' images, build the project's image and its fuzzers but also download resources like corpora. 
-
-
-Regarding \textit{FuzzBench}, most of the work was done on its Google Cloud bucket, specifically on the section where all experiments results are collected.
-To access and later download the resources needed, I incorporated the \textit{gsutil} suite in a python script to perform web scraping.
 
 \newpage
 \section{OSS-Fuzz}
