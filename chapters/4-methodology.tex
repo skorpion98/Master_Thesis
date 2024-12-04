@@ -3,18 +3,12 @@
 \ \\
 The objective of this thesis was to see if there were any overlooked bugs in common fuzzing benchmarks, choosing OSS-Fuzz and FuzzBench as they are among the most popular ones. This, in turn, meant analyzing the effectiveness of such automated testing campaigns and verify how efficiently they were being employed by open-source developers.
 
-What does it mean for a bug to be "overlooked" in this context? 
-If we think about OSS-Fuzz, where fuzzing is performed automatically by VMs, it means to look for cases where machines failed: this could happen either due to a fault in the automation process or due to the integration choices made by the developers.
+What does it mean for a bug to be "overlooked" in this context?
 
-In the first case, we may talk about limits imposed by OSS-Fuzz on its resources, like tests that cause out-of-memory scenarios, timeouts or even bugs that cannot be reliably and consistently reproduced. 
-In the second case, it is strictly related to the content of the \textit{project.yaml} configuration file: different sanitizers look for different types of bugs, while each fuzzing engine uses its own set of strategies to test a program, producing results that may be completely different from the other provided fuzzers.
+If we think about OSS-Fuzz, where fuzzing is performed automatically by VMs, it means to look for cases where machines failed: this could happen either due to a fault in the automation process or due to the integration choices made by the developers. In the first case, we may talk about limits imposed by OSS-Fuzz on its resources, like tests that cause out-of-memory scenarios, timeouts or even bugs that cannot be reliably and consistently reproduced.  In the second case, it is strictly related to the content of the \textit{project.yaml} configuration file: different sanitizers look for different types of bugs, while each fuzzing engine uses its own set of strategies to test a program, producing results that may be completely different from the other provided fuzzers. For this reason, I focused on the latest public "fuzzing queue" made available by the developers, i.e. the corpus of inputs used by OSS-Fuzz when performing the tests.
 
-For this reason, I focused on the latest public "fuzzing queue" made available by the developers, i.e. the corpus of inputs used by OSS-Fuzz when performing the tests.
-If we think about FuzzBench, where projects are actively tested by several different fuzzers, it means to look for bugs discovered in older versions that were not tested on newer ones, which obviously is a human error.
+If we think about FuzzBench, where projects are actively tested by several different fuzzers, it means to look for bugs discovered in older versions that were not tested on newer ones, which obviously is a human error. A small selection of projects from OSS-Fuzz are tested continuously by several different fuzzers, producing daily reports available both to the fuzzers and the chosen projects developers, along with public access to the corpora used to perform the tests as well as the results and the crashes found (if any). It is then responsibility of the project developers to analyze and fix these bugs, although this does not always happen. For this reason, I focused on analyzing a chosen set of experiments between 2020 and 2024, downloading all the available crashes and testing them on latest version, hoping to find old bugs that have yet to be fixed.
 
-A small selection of projects from OSS-Fuzz are tested continuously by several different fuzzers, producing daily reports available both to the fuzzers and the chosen projects developers, along with public access to the corpora used to perform the tests as well as the results and the crashes found (if any). It is then responsibility of the project developers to analyze and fix these bugs, although this does not always happen.
-
-For this reason, I focused on analyzing a chosen set of experiments between 2020 and 2024, downloading all the available crashes and testing them on latest version, hoping to find old bugs that have yet to be fixed.
 As previously mentioned, all relevant bugs were then appropriately reported to their respective developers.
 
 
@@ -373,11 +367,7 @@ However, this file only contained information on all experiments between 2020 an
 
 Then, I was tasked with selecting the projects that will be analyzed.
 
-Fuzzbench already provides a comprehensive list of open-source projects that have been integrated and continuously tested \cite{benchmarks}, however preliminary analysis on its Google Cloud Bucket (GCB) yielded a greater number of projects not listed on their website.
 
-After investigating the content of its repository and GCB, I discovered 7 additional projects that were added to the GitHub repository for only few months, and later removed and never restored again. More specifically, these projects were added as part of a conference on the effectiveness of fuzzing tools called "Search-Based and Fuzzing Tools (SBFT) '23" \cite{sbft23} and provided to all researchers as the benchmarks on which they had to test their fuzzers.
-
-It's interesting to notice that due to their relevance, these 7 projects will be later responsible for 90\% of the crash collected.
 Finally, to analyze all the experiments on FuzzBench GCB and download their content, I used the \textit{gsutil} suite provided by Google, which works similarly to the \verb|ls|, \verb|mv| and \verb|cp| command of the Linux shell, except that it takes as argument the url of a Gollge Cloud resource.
 
 To retrieve all the resources needed, I wrote a Python script that essentially performs horizontal scraping over the directory tree shown in figure \ref{fig:tree}, storing at each intermediate steps the link of the next resource to list using the \verb|gsutil ls| command.

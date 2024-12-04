@@ -247,14 +247,14 @@ The \textit{Fuzzing Bots Pool} is a cluster of VMs responsible for running the s
 \begin{itemize}
     \item \textbf{fuzz:} runs a fuzzing session
     \item \textbf{progression:} checks if a testcase still reproduces or if has been fixed
-    \item \textbf{regression:} calculates the revision range in which a crash was introduced
+    \item \textbf{regression:} calculates the commits range in which a crash was introduced
     \item \textbf{minimize:} eliminates duplicate testcases from the input seeds
     \item \textbf{pruning:} minimize a corpus to the smallest size based on coverage information
     \item \textbf{analyze:} runs a manually uploaded testcase against a specific job to see if it crashes
 \end{itemize}
 
 \begin{figure}[h]
-\makebox[\textwidth][c]{\includegraphics[width=0.635\paperwidth]{foto/clusterfuzz_architecture.png}}
+\makebox[\textwidth][c]{\includegraphics[width=0.64\paperwidth]{foto/clusterfuzz_architecture.png}}
 \caption{ClusterFuzz main architecture visualized \cite{clusterfuzz_docs}}
 \label{fig:clusterfuzz_architecture}
 \end{figure}
@@ -277,7 +277,7 @@ While it was initially intended for languages that are not memory-safe (C/C++), 
 
 The workflow is as follows. First, the maintainers of an open-source project create one or more "fuzz targets" that are integrated into the project's build and test system \cite{libfuzzer_docs}, where a "fuzz target" defines a function that takes an input (in this thesis, an array of bytes) and performs some operations on said to test a specific API or program's functionality. Developers are also expected to provide up-to-date corpus seeds, that will be used by the chosen fuzzers for cross-mutations and improve the fuzz target’s coverage. All these resources, along with instructions on how to build and fuzz the targets, are uploaded to a Google Cloud Service Bucket, a file-hosting service acting as a middle point between OSS-Fuzz and its fuzzing back-end ClusterFuzz.
 
-Then, a project's fuzzing session lasts (at most) 6 hours, evenly distributed across all fuzz targets with a minimum of 10 minutes per fuzz target, and \textit{ensemble fuzzing} is used when binaries are configured for multiple fuzzing engines (see figure \ref{fig:continuous_fuzzing}). Both the corpora used as input to the tests and the corpora produced as results of a successful fuzzing session (also called \textit{queues}) are publicly available and stored in the project's Google Cloud for research purposes and \textit{regression testing}, i.e. testing a program against old inputs to ensure that previously tested functionality still works as intended and that fixed bugs do not reappear.
+Then, a project's fuzzing session lasts (at most) 6 hours, evenly distributed across all fuzz targets with a minimum of 10 minutes per fuzz target, and \textit{ensemble fuzzing} is used when binaries are configured for multiple fuzzing engines (see figure \ref{fig:continuous_fuzzing}). Both the corpora used as input to the tests and the corpora produced as results of a successful fuzzing session (both also called \textit{queues}) are publicly available and stored in the project's Google Cloud for research purposes and \textit{regression testing}, i.e. testing a program against old inputs to ensure that previously tested functionality still works as intended and that fixed bugs do not reappear.
 
 Finally, any bug discovered is reported to the OSS-Fuzz issue tracker \cite{ossfuzz_bugtracker}, which uses the metadata sent by ClusterFuzz to create its report. Developers have 3 ways of dealing with this situation: they can commit new changes to fix the bug (verified by ClusterFuzz before closing an issue), assign the tag "WontFix" to the bug and notify that it will not be solved, or simply ignore it altogether. 
 
@@ -330,36 +330,33 @@ Some of the most common information reported are:
 
 
 \newpage
-To conclude, OSS-Fuzz follows a strict \textit{bug disclosure guideline} \cite{bug_disclosure}.
-When a bug is discovered, an automatic email is generated and sent to all email addresses specified in the "project.yaml" file, and an issue is opened on the issue tracker. This email contains the report created using ClusterFuzz, as well as an estimation of the priority and severity of the bug discovered. From this moment, the issue will be publicly visible in 90 days or after the fix is released (whichever comes earlier), meaning that anyone will have access to the causing input as well as any other debugging information related to what happened and how to reproduce the bug. Before the deadline expires, the developers may request a 14-day grace period if the patch is set to be released on a specific day within this extended period, in which case the public disclosure is delayed. In any case, Google reserves the right to change deadlines forwards or backwards depending on the circumstances and the severity of the findings.
+To conclude, OSS-Fuzz follows a strict \textit{bug disclosure policy} \cite{bug_disclosure}.
+When a bug is discovered (assuming it is not already known or a duplicate), an automatic email is generated and sent to all email addresses specified in the "project.yaml" file, and an issue is opened in the issue tracker. This email contains the report generated by ClusterFuzz, as well as an estimate of the priority and severity of the bug discovered. From this moment, the issue will be publicly visible in 90 days or after the fix is released (whichever comes earlier), meaning that anyone will have access to the causing input as well as any other debugging information related to what happened and how to reproduce the bug. Before the deadline expires, developers may request a 14-day grace period if the patch is scheduled to be released on a specific day within this extended period, in which case the public disclosure will be delayed. In all cases, Google reserves the right to move deadlines forward or backward depending on the circumstances and severity of the findings.
 
 
-\newpage
+
+
 \subsection{FuzzBench}
-
-\matteo{Again, you are providing many practical details, that are neither very interesting nor useful; you say that fuzzers are added through pull requests, but you do not say what benchmarks are being used, in what version (and then you should comment on the choice of an old version -> this is done to provide a fixed version for constant comparison through the year, plus those versions are known to contain bugs), what seeds are used, if queues are re-used (they don't, unlike OSS-Fuzz), what types of experiments can be performed (coverage vs bugs, until last year, now it was changed as you told us)}
-
-\matteo{Lastly, we are finding many bugs in sbft23, so you should probably do a subsubsection on that and say anything interesting in you can find about it, like what subjects were used (I think 5 were public at first but 10 were not public, so that the competition could be performed on subject the authors did not test) and so on. Look for material on the internet, I am providing two links down here in comments}
-
-%https://sbft23.github.io/tools/
-%https://storage.googleapis.com/www.fuzzbench.com/reports/experimental/SBFT23/Final-Bug/index.html
-
-The \textit{FuzzBench Project} \cite{fuzzbench_paper} is a free service that provides fuzzers' developers with several real-world benchmark tested at Google scale, comparing the results with other famous fuzzers (such as AFL and LibFuzzer) and allowing them to evaluate their performances thanks to daily reports for further improvements.
-\cite{fuzzbench_docs}
+The \textit{FuzzBench Project} \cite{fuzzbench_paper} is a free service that provides fuzzer developers with several real-world benchmarks tested at the Google scale, compares the results with other famous fuzzers (such as AFL and LibFuzzer), and allows them to evaluate their performance thanks to daily reports for further improvement \cite{fuzzbench_docs}.
 
 \begin{figure}[h]
-\makebox[\textwidth][c]{\includegraphics[width=0.68\paperwidth]{foto/fuzzbench_architecture.png}}
+\makebox[\textwidth][c]{\includegraphics[width=0.7\paperwidth]{foto/fuzzbench_architecture.png}}
 \caption{FuzzBench main architecture visualized \cite{fuzzbench_docs}}
 \label{fig:fuzzbench_architecture}
 \end{figure}
 
 The infrastructure is structured as follows.
-Initially, a fuzzer developer integrates its product within FuzzBench using a Dockerfile, containing all the resources necessary to build targets using the fuzzer and also where all benchmarks will be executed.
+Initially, a fuzzer developer integrates its tool within FuzzBench using a Dockerfile, containing all the resources necessary to build targets using its fuzzer and also defining the environment where all benchmarks will be executed. Similarly to OSS-Fuzz, this process is done via "pull requests", which are automatically revisioned and accepted by bots.
 
-Similarly to OSS-Fuzz, this process is done via "pull requests", which are automatically revisioned and accepted by bots.
-Then, the developers may choose between two testing approaches: standard and OSS-Fuzz.
+Developers can then choose between two testing approaches: standard and OSS-Fuzz. In the former case, the benchmark is created by the developers themselves, which requires the definition of fuzz targets, build files, seed inputs and Docker images to correctly build, link the fuzzer to the targets and run the tests. In the latter case, the developers employ a fuzz target from a selection of OSS-Fuzz projects kept at a predefined checkout known to contain bugs \cite{benchmarks} with a predefined set of seeds inputs: this ensures that all tests are performed on the same version across many trials and with the same testing configuration, crucial to have a reference point when tracking performance over time, while also allowing them to test their product on a real-world scenario. A fuzzing session in FuzzBench spans over a duration of 24 hours, with each fuzzer running 20 trials on each individual benchmark.
 
-In the first case, the benchmark is created by the developers themselves, and this requires the definition of fuzz targets, build files and Docker images that will be used to correctly build and link the fuzzer to the targets and run the tests.
+Finally, a performance report will be created highlighting the strengths and weaknesses of the fuzzer on each benchmark, comparing individual and overall results with other integrated fuzzers both in terms of bugs found and coverage achieved.
 
-In the latter, the developers employ a fuzz target from any OSS-Fuzz project as benchmark, allowing them to test their product on a real-world scenario.
-Finally, a report will be created highlighting the strengths and weaknesses of the fuzzer on the various benchmarks, comparing individual and overall results with other integrated fuzzers.
+
+
+\subsubsection{SBFT' 23}
+FuzzBench already provides 21 open-source projects that are continuously tested by the integrated fuzzers, however preliminary analysis revealed a greater number of projects, including benchmarks not listed on the website \cite{benchmarks}. After investigating the contents of this repository and its commit history, 7 additional projects were discovered, added for only a few months and then removed to never be restored.  
+
+These projects were added for a conference on the effectiveness of fuzzing tools called "Search-Based and Fuzzing Tools (SBFT) 2023" \cite{sbft23}, where a tool competition was created using FuzzBench as the benchmarking tool: the idea was to allow developers to integrate their fuzzers into FuzzBench, run experiments locally on a provided sample benchmark to familiarize with real open-source projects and state-of-the-art fuzzers, and analyze the provided evaluation reports to visualize the effectiveness of their products. In particular, these projects were used during the final stages of the competition, to ensure fairness and forcing all participants to perform the final evaluations on previously untested benchmarks.
+
+The goal of this conference was to provide a way for developers to approach continuous fuzzing frameworks, to contribute to the development of FuzzBench by integrating new and effective fuzzers, and to provide real-world scenarios for developers to test their tools.
