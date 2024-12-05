@@ -15,7 +15,7 @@ As previously mentioned, all relevant bugs were then appropriately reported to t
 
 \newpage
 \section{Setting up the environment}
-All tests were performed on two separate machines with similar specs, both equipped with personal installations of Ubuntu 22.04 LTS already run-in and used, using the following general-purpose tools:
+All tests were performed on two separate machines with similar specs, both equipped with personal installations of Ubuntu 22.04 LTS already run-in and used, using the following tools:
 \begin{itemize}
     \item \textit{Docker} \cite{Docker}: virtualization tool used to run the different containers needed by OSS-Fuzz to create the environments where each projects was built and tested
     \item \textit{Valgrind} \cite{Valgrind_1}\cite{Valgrind_2}: dynamic binary instrumentation (DBI) framework with tools that perform analysis, profiling and management of a program during its execution, used specifically for the "Memcheck" tool when looking for memory-related bugs in fuzz targets built without sanitizers
@@ -27,8 +27,9 @@ All tests were performed on two separate machines with similar specs, both equip
 Regarding \textit{OSS-Fuzz}, most of the preparation was done using its GitHub repository, which was cloned locally on both machines. To provide its services, OSS-Fuzz uses several Python scripts that can be invoked from the command line with appropriate arguments: these commands can be used to update the repository and the files used to build each project, update the base images and each project image, build the project image and its fuzzers, and finally download other resources such as reports and publicly available corpora. 
 
 Regarding \textit{FuzzBench}, most of the preparation was done by incorporating the \textit{gsutil} suite in a Python script that performed web scraping and downloaded content from its Google Cloud bucket, specifically on the section where all experiments results are collected.
+\ \\
 
-All tests were run by providing Docker with unlimited access to the CPU cores and disk space but limiting RAM usage to 16GB, to ensure that no input may cause an out-of-memory situation that could result in a complete crash of the testing machine. 
+All tests were run by providing Docker with unlimited access to the CPU cores and disk space, while RAM was limited to 16GB, to ensure that no input may cause an out-of-memory situation that could result in a complete crash of the testing machine. 
 
 
 \newpage
@@ -66,7 +67,7 @@ Since the Monorail APIs could only be accessed by the developers of projects alr
 
 
 \newpage
-The Python web-scraping script written requests a range of "report IDs" to be retrieved, then opens a new Google Chrome instance and performs a connection to a specifically constructed link on the Monorail website, attempting to reconnect only once if the first fails. If the resulting DOM displays a login form, it means that the requested bug is still in the disclosure window, in which case the next ID is analyzed. Assuming that the requested report is publicly available, the DOM is scanned for key information. Finally, all the information gathered from each report is stored in JSON files. 
+The Python web-scraping script written requests a range of "report IDs" to be retrieved, then opens a new Google Chrome instance and performs a connection to a specifically constructed link on the Monorail website, attempting to reconnect only once if the first fails. If the resulting DOM displays a login form, it means that the requested bug is still in the disclosure window, in which case the next ID is analyzed. Assuming that the requested report is publicly available, the DOM is scanned for key information, finally stored in JSON files. 
 
 This analysis was performed on all bugs between 2023-01-01 and 2024-06-31, for a total of 11743 collected reports.
 
@@ -190,7 +191,7 @@ $ cp -R /usr/msan/include/* /usr/local/include
 \begin{verbatim}
 $ sudo apt install gdb valgrind
 \end{verbatim}
-    \item sometimes, the \verb|apt| tool was not available in a specific Docker container, because all base images provided by OSS-Fuzz contain a minimal installation of Linux Ubuntu with only some key packages that are usually enough to compile a programs, such as compiler, assembler, text editors and standard libraries: in such cases, the \verb|unminimize| command was executed, which essentially "unpacks" the container and reverts it to a standard Ubuntu image, reinstalling all the default packages as well as standard additional tools
+    \item sometimes, the \verb|apt| tool was not available in a specific Docker container, because all base images provided by OSS-Fuzz contain a minimal installation with only some key packages that are usually enough to compile a programs, such as compiler, assembler, text editors and standard libraries: in such cases, the \verb|unminimize| command was executed, which essentially "unpacks" the container and reverts it to a standard Ubuntu image, reinstalling all the default packages as well as standard additional tools
 \end{itemize}
 
 
@@ -214,7 +215,7 @@ When testing fuzz targets built with ASan, MSan or UBSan, I used the following c
       done
 \end{verbatim}
 
-This commands uses the shell \verb|for| construct to scan all files found in the "corpus" directory, then prints the name of the current testcase on the terminal for monitoring purposes, and finally logs the name of the current testcase and the results of the fuzz target executed on that particular testcase on a log file.
+The shell \verb|for| construct scans all files found in the "corpus" directory, then prints the name of the current testcase on the terminal for monitoring purposes, and finally logs the name of the current testcase and the results of the fuzz target executed on that particular testcase on a log file.
 
 \begin{figure}[h]
 \makebox[\textwidth][c]{\includegraphics[width=0.8\paperwidth]{foto/ubsan_example.png}}
@@ -287,7 +288,7 @@ As previously mentioned, the FuzzBench campaign started in 2020, performing test
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.4]{foto/tree.png}
-\caption{FuzzBench's Google Cloud directory tree}
+\caption{Simplified structure of the FuzzBench's Google Cloud directory tree}
 \label{fig:tree}
 \end{figure}
 \ \\
@@ -307,30 +308,26 @@ Following the experiments, each project has its own folder that specifies the na
 \end{itemize}
 
 
-The objective of this analysis was to build the latest version of several experiments, download the content of all the available \verb|crashes| for each one of them and verify whether all these old crashes have been fixed or not.
-
-Considering that downloading and analyzing the content of potentially tens of millions zip files would require several month, I was tasked with finding a way to differentiate between the different types of test sessions.
-To do this, I found the \textit{experiment-requests.yaml} configuration file \cite{exp_yaml} inside the FuzzBench repository, which contained
-all information related to the type of tests conducted, the projects tested as well as all the fuzzing engines used:
+The objective of this analysis was to build the latest version of several experiments, download all the available \verb|crashes| for each one of them and verify whether they have been fixed or not. However, preliminary analysis yielded over 100 milion possible zip files to download and test, which would require several months of work by itself. 
+As previously mentioned, FuzzBench provides coverage-oriented or bug-oriented fuzzing, therefore I focused on bug-oriented experiments for the analysis. To do this, I found the \textit{experiment-requests.yaml} configuration file \cite{exp_yaml} inside the FuzzBench repository, which contained all information related to the type of tests conducted, the projects tested as well as all the fuzzing engines used:
 
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.55]{foto/exp_yaml.png}
-\caption{Excerpt fron the experiment configuration file}
+\includegraphics[scale=0.58]{foto/exp_yaml.png}
+\caption{Excerpt from the experiment configuration file}
 \label{fig:exp_yaml}
 \end{figure}
-\ \\
-Then, similarly to the process followed in section \ref{selection}, I wrote a simple Python script taking as input the above file and storing the name of all those experiments containing the string "type: bug".
-However, this file only contained information on all experiments between 2020 and 2023, and unfortunately I was not able to find any reference on all the experiments performed in 2024, forcing me to analyze all of them.
 
+Similarly to the process shown in section \ref{selection}, I wrote a simple Python script taking as input the above file and storing the name of all those experiments containing the string "type: bug". Unfortunately, this file only contained information on all experiments between 2020 and 2023, forcing me to analyze all the experiments performed in 2024.
 
-Then, I was tasked with selecting the projects that will be analyzed.
-
+Regarding the selection of the projects and fuzz targets to test, while the initial idea was to perform the analysis only on the benchmarks provided by FuzzBench, it was later decided to also include the special benchmarks added during the "SBFT '23" conference (refer to \ref{conference}) due to the overwhelmingly amount of bugs discovered when performing preliminary tests on them.
 
 Finally, to analyze all the experiments on FuzzBench GCB and download their content, I used the \textit{gsutil} suite provided by Google, which works similarly to the \verb|ls|, \verb|mv| and \verb|cp| command of the Linux shell, except that it takes as argument the url of a Gollge Cloud resource.
 
 To retrieve all the resources needed, I wrote a Python script that essentially performs horizontal scraping over the directory tree shown in figure \ref{fig:tree}, storing at each intermediate steps the link of the next resource to list using the \verb|gsutil ls| command.
-In conclusion, this analysis yielded 971656 zip file, for a total of (qualche milione di) crashes, and the following projects and harnesses being tested:
+
+\newpage
+In conclusion, this analysis yielded 971656 zip file, a total of 9 milion crashes to test, and the following projects and fuzz targets being tested:
 
 \noindent
 \begin{tabularx}{\textwidth}{
@@ -360,6 +357,9 @@ In conclusion, this analysis yielded 971656 zip file, for a total of (qualche mi
 
 
 
+
+
+\newpage
 \subsection{Testing with FuzzBench}
 Explain how projects were built....
 Explain how tests were automated and their duration...
