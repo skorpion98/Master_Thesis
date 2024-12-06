@@ -89,27 +89,19 @@ The crashes were related to a SEGV signal sent as a consequence of the process a
 \label{fig:segv_gpac}
 \end{figure}
 \ \\
-It's interesting to note that these bugs have already been reported by ClusterFuzz when discovered by this work and, more importantly, they were still in the bug disclosure windows: this meant that the inputs causing these bugs were not meant to be added to later fuzzing queues and should have not be publicly accessible and available, due to obvious security implications.
+It's interesting to note that these bugs have already been reported by ClusterFuzz when discovered by this work and, more importantly, they were still in the bug disclosure windows: this meant that the inputs causing these bugs were not meant to be added to later fuzzing queues and should have not be publicly accessible and available, due to obvious security implications. This highlights a severe lack of monitoring from both OSS-Fuzz maintainers and the project's developers when it comes to making sure that crucial vulnerabilities are kept private, as indicated by the bug disclosure guidelines. \ziosaba{I'm not exactly sure what else is there to say about the crashes. Blame it on the human? Blame it on the machine? Also, is it correct what I've written? Not really sure}
 
-This highlights a severe lack of monitoring from both OSS-Fuzz maintainers and the project's developers when it comes to making sure that crucial vulnerabilities are kept private, as indicated by the bug disclosure guidelines.
-
-\ziosaba{I'm not exactly sure what else is there to say about the crashes. Blame it on the human? Blame it on the machine? Also, is it correct what I've written? Not really sure}
 The remaining 25 memory bugs were mostly related to use-of-uninitialized-memory (UUM) and memory-bound errors, more specifically:
 \begin{itemize}
-    \item \textit{conditional jump or move depends on uninitialized value}
-    \item \textit{use of uninitialized value in function [...]}
-    \item \textit{invalid read of size [...]}
+    \item \textit{conditional jump or move depends on uninitialized value}: happens when an \verb|if| statement is based on a variable whose value is uninitialized
+    \item \textit{use of uninitialized value in function [...]}: happens when one (or more) of the parameters passed to an invoked function are uninitialized
+    \item \textit{invalid read of size [...]}: happens when a read/write operation performed overruns the provided buffer, as the content outside of a buffer could be anything
 \end{itemize}
-The first error happens when an \verb|if| statement is based on a variable whose value is uninitialized.
-
-The second error happens when one (or more) of the parameters passed to an invoked function are uninitialized.
-
-The third error happens when a read/write operation performed overruns the provided buffer, as the content outside of a buffer could be anything.
 
 All these errors, albeit easy to spot and fix, may lead to undefined behavior.
-After reporting the UUM bugs and having the pleasure of interacting with the CEO of GPAC itself, we were happy to discover all bugs fixed in just few days.
+After reporting the UUM bugs and having the pleasure of interacting with the CEO of GPAC itself, we were happy to discover all bugs fixed in just few days. Also the developers were grateful for this contribution, as they have recently been battling with seemingly-random bugs causing disruptions with the normal functionality of the program, therefore the report has been valuable in helping them to remove uninitialized variables that were leading to undefined behavior.
 
-Also the developers were grateful for this contribution, as they have recently been battling with seemingly-random bugs causing disruptions with the normal functionality of the program, therefore the report has been valuable in helping them to remove uninitialized variables that were leading to undefined behavior.
+
 \ziosaba{This project was a clear example of something? What else?}
 
 \ziosaba{Also, I would honestly move these "Case Study" subsections in another dedicated section, just because if I have to also make a brief point about how the developers handled the problem and their response, then maybe is better to put them after "Developers' responses" and before "Discussion", so that I can also make cross-reference with what was written before}
@@ -123,16 +115,11 @@ The heap-buffer overflow bug was initially presented as an ASan bug related to a
 The crashes were both related to a SEGV signal sent as a consequence of the process attempting to access a low address that was not mapped within the process's memory region, causing an access violation fault. After a further analysis, it was later discovered that both problem originated from a series of read/write operations performed on uninitialized values causing undefined behavior, ultimately leading to the process accessing an erroneous address.
 The first memory bug was related to a memory-bound error caused by several reads operation overrunning the provided buffers, leading to undefined behavior. At the moment of writing, the problem has yet to be fixed because the developers are discussing whether to rewrite or remove the source file causing the problem, as they argue that it is very insecure and could pose a threat to the overall security of the product.
 The second memory bugs was related to a use-of-uninitialized-memory (UUM) bug when opening a provided input media file. At the moment of writing, a fix has been proposed but it has yet to be merged with the main code.
-Finally, the undefined-behavior (UB) bugs were all related to signed integer-overflow errors, which are relatively easy to fix.
-Yet, at the moment of writing they have not been acknowledged by the developers.
+Finally, the undefined-behavior (UB) bugs were all related to signed integer-overflow errors, which are relatively easy to fix. Yet, at the moment of writing they have not been acknowledged by the developers.
+
 This project was a clear example of the most common behavior encountered during this work when interacting with open-source developers.
-
 When presented with bugs that could potentially lead to vulnerabilities or problems in the normal functionalities of their program, their response is usually quick and the problem is fixed in a short amount of time. 
-
 Instead, when the problems have low or negligible priority (like the undefined-behavior bugs), they either ignore the reports or acknowledge their existence and postpone them indefinitely. 
-
-\ \\ 
- 
 
 \matteo{Make a new subsection and talk about what can we learn about this, and how can this issue be fixed by Google.}
 \ziosaba{Why not moving this topic in the "Discussion" section?}
@@ -141,6 +128,46 @@ Instead, when the problems have low or negligible priority (like the undefined-b
 
 \newpage
 \section{FuzzBench (aggiornare la tabella fino all'ultimo!)}
+\begin{adjustbox}{width=\textwidth,center}
+\begin{tabular}{|l|l|l|l|l|l|l|l|}
+\hline
+\textbf{Project} & \textbf{Sanitizers} & \textbf{Queue size} & \textbf{Crashes} & \textbf{ASan} & \textbf{UBSan} & \textbf{Total} & \textbf{Confirmed}  \\ 
+\hline
+arrow   &NONE   &$1163787$   &$0$   &$1$   &$9$   &$10$   &$0$ \\
+aspell   &A+UB   &$919701$   &$0$   &$0$   &$4$   &$4$   &$2$ \\
+assimp   &NONE   &$312651$   &$43$   &$114$   &$14$   &$171$   &$54$ \\
+bloaty   &NONE   &$2349$   &$0$   &$0$   &$2$   &$2$   &$2$ \\
+curl   &NONE   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+ffmpeg   &ALL   &$212617$   &$0$   &$0$   &$6$   &$6$   &$0$ \\
+file   &A+UB   &$1916360$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+freetype2   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+grok   &ALL   &$1492374$   &$0$   &$2$   &$15$   &$17$   &$13$ \\
+harfbuzz   &ALL   &$34634$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+freetype2   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+harfbuzz   &ALL   &$34634$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+jsoncpp   &A+UB   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+libaom   &ALL   &$19729$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+libjpeg-turbo   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+libpcap   &ALL   &$111$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+libpng   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+libxml2   &ALL   &$1961857$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+mbedtls   &NONE   &$1$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+openssl   &A+UB   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+openthread   &A+UB   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+php   &ALL   &$202235$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+proj4   &NONE   &$208971$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+re2   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+sqlite3   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+systemd   &ALL   &$238072$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+vorbis   &A+M   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+woff2   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+zlib   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+\hline
+TOTAL BUGS   &   &   &$43$   &$117$   &$50$   &$210$   &$71$          \\
+\hline
+\end{tabular}
+\end{adjustbox}{}
+\ \\ 
 
 \matteo{Kind of the same we did for OSS-Fuzz, let's wait for some data before drafting something, I guess.}
 
@@ -151,6 +178,7 @@ Instead, when the problems have low or negligible priority (like the undefined-b
 \newpage
 \section{Developers' responses}
 Discuss the reports and the developers' answers, including some considerations about their responses...
+\ziosaba{partially discussed in "Case Study" paragraphs, what to do here?}
 
 \newpage
 \section{Discussion}
