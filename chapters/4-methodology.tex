@@ -142,7 +142,7 @@ All of this has resulted in the following projects and binaries being tested:
 
 
 
-\subsection{Testing with OSS-Fuzz}
+\subsection{Testing with OSS-Fuzz} \label{test}
 The OSS-Fuzz repository contains several python scripts to build and test the available projects as well as debugging and reproducing crashes and bugs. Most of the tools used in this work are provided by the "helper.py" script, which I used to download a project's Docker image, build the fuzzers and download the lastest public corpora made available by the developers, using the following commands:
 \begin{verbatim}
     $ python3 helper.py pull_images 
@@ -318,21 +318,19 @@ As previously mentioned, FuzzBench provides coverage-oriented or bug-oriented fu
 \label{fig:exp_yaml}
 \end{figure}
 
-Similarly to the process shown in section \ref{selection}, I wrote a simple Python script taking as input the above file and storing the name of all those experiments containing the string "type: bug". Unfortunately, this file only contained information on all experiments between 2020 and 2023, forcing me to analyze all the experiments performed in 2024.
+Similarly to the process shown in section \ref{selection}, I wrote a simple Python script taking as input the above file and storing the name of all those experiments containing the string "type: bug". Unfortunately, this file only contained information on all experiments between 2020 and 2023, forcing me to later retrieve all the experiments performed in 2024.
 
 Regarding the selection of the projects and fuzz targets to test, while the initial idea was to perform the analysis only on the benchmarks provided by FuzzBench, it was later decided to also include the special benchmarks added during the "SBFT '23" conference (refer to \ref{conference}) due to the overwhelmingly amount of bugs discovered when performing preliminary tests on them.
 
-Finally, to analyze all the experiments on FuzzBench GCB and download their content, I used the \textit{gsutil} suite provided by Google, which works similarly to the \verb|ls|, \verb|mv| and \verb|cp| command of the Linux shell, except that it takes as argument the url of a Gollge Cloud resource.
+Finally, to retrieve all possible crashes from the bug-oriented experiments performed in 2020-2023 and all experiments from 2024, I used the \textit{gsutil} suite provided by Google, which works similarly to the \verb|ls|, \verb|mv| and \verb|cp| command of the Linux shell, except that it takes as argument the URL of a Google Cloud resource. To construct the URL of all the resources needed, I wrote a Python script that essentially performs horizontal scraping over the directory tree shown before (Figure \ref{fig:tree}), storing at each intermediate steps the link of the next resource to list using the \verb|gsutil ls| command.
+\ \\ 
 
-To retrieve all the resources needed, I wrote a Python script that essentially performs horizontal scraping over the directory tree shown in figure \ref{fig:tree}, storing at each intermediate steps the link of the next resource to list using the \verb|gsutil ls| command.
-
-\newpage
 In conclusion, this analysis yielded 971656 zip file, a total of 9 milion crashes to test, and the following projects and fuzz targets being tested:
 
 \noindent
 \begin{tabularx}{\textwidth}{
     @{\hspace{2em}}% Space for left bullet
-    >{\leavevmode\llap{\textbullet~}\raggedright\rule{0pt}{3ex}}% Left bullet + formatting of column
+    >{\leavevmode\llap{\textbullet~}\raggedright\rule{0pt}{4ex}}% Left bullet + formatting of column
     X% Left column specification
     @{\quad\hspace{1em}}% Space between columns + right bullet space
     >{\leavevmode\llap{\textbullet~}\raggedright\arraybackslash}% Right bullet + formatting of column
@@ -361,20 +359,10 @@ In conclusion, this analysis yielded 971656 zip file, a total of 9 milion crashe
 
 \newpage
 \subsection{Testing with FuzzBench}
-Explain how projects were built....
-Explain how tests were automated and their duration...
+FuzzBench projects were build and tested almost identically to the methodology shown for OSS-Fuzz (see \ref{test}), except for few small differences.
 
-
-
-\ziosaba{All the collected crashes were divided in 3 categories:
-\begin{itemize}
-    \item \textbf{crash:} inputs leading to any scenario that forces the system to close the process, like SEGV and heap/stack buffer overflows
-    \item \textbf{out-of-memory (oom):} inputs inducing memory leaks or using huge allocation sizes to purposely test fail-safe mechanisms
-    \item \textbf{timeout:} inputs that are either very long to parse or that purposely introduce unnecessary operations, again to test the resiliency of the program 
-\end{itemize}}
-
-
-When i testef fuzzbench and had to build using ASan + UBSan, i Didi this:
+Initially, I used the "helper.py" script to download the latest Docker image for each project, but the fuzzers had to be built manually:
+this is because all FuzzBench benchmarks are compiled using a custom combination of sanitize flags from ASan and UBSan \cite{flags}, implying that FuzzBench does not perform memory analysis when fuzzing. To replicate this build configuration I had to modify the environment variables provided by the Docker images, using with the following command:
 \begin{verbatim}
     $ docker run --rm --privileged 
         --platform linux/amd64 --memory=16g 
@@ -385,7 +373,8 @@ When i testef fuzzbench and had to build using ASan + UBSan, i Didi this:
             -fsanitize=address,array-bounds,bool,builtin,enum,
                 integer-divide-by-zero,null,object-size,return,
                 returns-nonnull-attribute,shift,
-                signed-integer-overflow,unsigned-integer-overflow,
+                signed-integer-overflow,
+                unsigned-integer-overflow,
                 unreachable,vla-bound,vptr
             -fno-sanitize-recover=array-bounds,bool,builtin,enum,
                 integer-divide-by-zero,null,object-size,return,
@@ -400,3 +389,25 @@ When i testef fuzzbench and had to build using ASan + UBSan, i Didi this:
         -it  gcr.io/oss-fuzz/{project_name} /bin/bash
 \end{verbatim}
 
+As previously shown, the first parameters are needed to create a privileged instance of Docker, specify the running platform on which the fuzz targets will be tested and limit the container memory usage, the arguments starting with \verb|-e| override the environment variables provided by the Docker image, the arguments starting with \verb|-v| are used to create shared directories and the last line invokes the project image to load as well as making it interactive by spawning a \verb|/bin/bash| process.
+Given that the container accepts only one sanitizer at a time, I had to specify both ASan and UBSan flags in the same variable storing the ASan sanitizer flags, using as reference the subset of UBSan flags used by default by FuzzBench \cite{flags}.
+
+\newpage
+All crashes collected during the initial analysis were then categorized as follows:
+\begin{itemize}
+    \item \textbf{crash:} inputs leading to any scenario that forces the system to close the process, like SEGV and heap/stack buffer overflows
+    \item \textbf{out-of-memory (oom):} inputs inducing memory leaks or using huge allocation sizes to purposely test fail-safe mechanisms
+    \item \textbf{timeout:} inputs that are either very long to parse or that purposely introduce unnecessary operations, again to test the resiliency of the program 
+\end{itemize}
+
+Finally, tests were performed using the following command:
+\begin{verbatim}
+    $ for i in /corpus/*; do 
+        echo "TEST" $i; 
+        echo "TEST" $i >> /logfiles/PROJECT_SANITIZER-NAME.log; 
+        timeout 30s ./{fuzz_target} $i 
+            &>> /logfiles/PROJECT_SANITIZER-NAME.log; 
+      done
+\end{verbatim}
+
+As previously shown, the shell \verb|for| construct scans all files found in the "corpus" directory, then prints the name of the current testcase on the terminal for monitoring purposes, and finally logs the name of the current testcase and the results of the fuzz target executed on that particular testcase on a log file. The only addition is the \verb|timeout| command, and that is because due to the presence of inputs that purposely take unnecessary time, I decided to follow the same timeout duration used by ClusterFuzz when fuzzing with AFL++ \cite{timeout}.
