@@ -245,7 +245,7 @@ It is based on a highly scalable distributed system of VMs that performs fully a
 The \textit{App Engine} provides a web interface to the information collected during each fuzzing session, allowing the developers to easily access crashes, results and other information. This is also where tests can be scheduled, which is done via \verb|cron| jobs.
 The \textit{Fuzzing Bots Pool} is a cluster of VMs responsible for running the scheduled fuzzing sessions, and they perform the following operations:
 \begin{itemize}
-    \item \textbf{fuzz:} runs a fuzzing session
+    \item \textbf{fuzz:} runs a fuzzing session, timeout different for each fuzzer
     \item \textbf{progression:} checks if a testcase still reproduces or if has been fixed
     \item \textbf{regression:} calculates the commits range in which a crash was introduced
     \item \textbf{minimize:} eliminates duplicate testcases from the input seeds
