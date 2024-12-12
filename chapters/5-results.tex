@@ -75,16 +75,13 @@ The crashes were related to a SEGV signal sent as a consequence of the process a
 \label{fig:segv_gpac}
 \end{figure}
 \ \\
-It's interesting to note that these bugs have already been reported by ClusterFuzz when discovered by this work and, more importantly, they were still in the bug disclosure windows: this meant that the inputs causing these bugs were not meant to be added to later fuzzing queues and should have not be publicly accessible and available, due to obvious security implications. This highlights a severe lack of monitoring from both OSS-Fuzz maintainers and the project's developers when it comes to making sure that crucial vulnerabilities are kept private, as indicated by the bug disclosure guidelines. \ziosaba{I'm not exactly sure what else is there to say about the crashes. Blame it on the human? Blame it on the machine? Also, is it correct what I've written? Not really sure}
-
-The remaining 25 memory bugs were mostly related to use-of-uninitialized-memory (UUM) and memory-bound errors, more specifically:
+It's interesting to note that these bugs have already been reported by ClusterFuzz when discovered by this work and, more importantly, they were still in the bug disclosure windows: this meant that the inputs causing these bugs were not meant to be added to later fuzzing queues and should have not be publicly accessible and available, due to obvious security implications. This highlights a severe lack of monitoring from both OSS-Fuzz maintainers and the project's developers when it comes to making sure that crucial vulnerabilities are kept private, as indicated by the bug disclosure guidelines. \ziosaba{I'm not exactly sure what else is there to say about the crashes. Blame it on the human? Blame it on the machine? Also, is it correct what I've written? Not really sure} The remaining 25 memory bugs were mostly related to use-of-uninitialized-memory (UUM) and memory-bound errors, more specifically:
 \begin{itemize}
     \item \textit{conditional jump or move depends on uninitialized value}: happens when an \verb|if| statement is based on a variable whose value is uninitialized
     \item \textit{use of uninitialized value in function [...]}: happens when one (or more) of the parameters passed to an invoked function are uninitialized
     \item \textit{invalid read of size [...]}: happens when a read/write operation performed overruns the provided buffer, as the content outside of a buffer could be anything
 \end{itemize}
 
-All these errors, albeit easy to spot and fix, may lead to undefined behavior.
 After reporting the UUM bugs and having the pleasure of interacting with the CEO of GPAC itself, we were happy to discover all bugs fixed in just few days. Also the developers were grateful for this contribution, as they have recently been battling with seemingly-random bugs causing disruptions with the normal functionality of the program, therefore the report has been valuable in helping them to remove uninitialized variables that were leading to undefined behavior.
 
 
