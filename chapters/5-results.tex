@@ -25,9 +25,9 @@ imagemagick      & ALL                 & $9,470$             & $0$              
 libxml2          & ALL                 & $13,474$            & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
 skia             & ALL                 & $18,295$            & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\ 
 \hline
-ghostscript      & A+M                 & $9,917$             & $0$              & $0$           & $32$          & $1$            & $33$            & $33$                \\
+\ziosaba{???}      & A+M                 & \ziosaba{???}             & \ziosaba{???}              & \ziosaba{???}           & \ziosaba{???}        & \ziosaba{???}            & \ziosaba{???}           & \ziosaba{???}               \\
+gpsd    & A+M                 & $5404$               & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
 libyang          & A+M                 & $8,745$             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
-myanmar-tools    & A+M                 & $448$               & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
 openjpeg         & A+M                 & $8,856$             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
 wasmedge         & A+M                 & $9,454$             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\ 
 \hline
@@ -57,7 +57,7 @@ TOTAL BUGS   &   &   &$4$   &$6$   &$80$   &$56$   &$145$   &$103$       \\
 
 The above table shows the aggregated results for OSS-Fuzz, dividing bugs per category and showing the total number of bugs found compared to the number of bugs that were confirmed by the respective developers after being reported. While it's important to note that this is a very small subset of projects tested (25 out of 1000+) and is not representative of the entire OSS-Fuzz campaign, it is still a good indicator that there are indeed bugs that these frameworks are missing.
 
-This analysis found a total of 145 bugs (an average of 5.8 bugs per project), mostly originated by all projects that were not tested with all sanitizers: this scenario was to be expected, as it would make sense for projects that are being tested as thoroughly as possible to also have less undetected bugs. This is also a good example of how adding a sanitizer to your development cycle is beneficial to the program. However, additional testing is not a replacement for programs written following good coding practices: "Ghostscript" uses MSan yet it has the highest number of memory-related bugs, "Cairo" uses UBSan yet it has the highest number of undefined-behavior bugs.
+This analysis found a total of 145 bugs (an average of 5.8 bugs per project), mostly originated by all projects that were not tested with all sanitizers: this scenario was to be expected, as it would make sense for projects that are being tested as thoroughly as possible to also have less undetected bugs. This is also a good example of how adding a sanitizer to your development cycle is beneficial to the program. However, additional testing is not a replacement for programs written following good coding practices: "Ghostscript" uses MSan yet it has the highest number of memory-related bugs, "Cairo" uses UBSan yet it has the highest number of undefined-behavior bugs. \ziosaba{FIX PREVIOUS PHRASE AFTER NEW PROJECT}
 
 We can also infer the popularity of each sanitizer. ASan is the most widely used, which is reflected by the number of bugs it found. UBSan is also among the most used ones, although the statistic shown here is biased by "Cairo": while this project is affected by many UB bugs, specifically improper conversion of data between different types, almost all previous reports on the issue tracker related to similar problems were simply marked as "Wont Fix". Finally, Valgrind's memory analysis via the "Memcheck" tool yielded the highest number, highlighting how MSan was often not used by developers during tests due to its reports containing too many false positives.
 
@@ -139,15 +139,15 @@ vorbis   &A+M   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
 woff2   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
 zlib   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
 \hline
-arrow   &NONE   &$1163787$   &$0$   &$1$   &$9$   &$10$   &$0$ \\
-aspell   &A+UB   &$919701$   &$0$   &$0$   &$4$   &$4$   &$2$ \\
-assimp   &NONE   &$312651$   &$43$   &$114$   &$14$   &$171$   &$54$ \\
+arrow   &NONE   &$1163787$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+aspell   &A+UB   &$919701$   &$0$   &$0$   &$2$   &$2$   &$2$ \\
+assimp   &NONE   &$312651$   &$43$   &$104$   &$13$   &$160$   &$55$ \\
 ffmpeg   &ALL   &$212617$   &$0$   &$0$   &$6$   &$6$   &$0$ \\
 file   &A+UB   &$1916360$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
 grok   &ALL   &$1492374$   &$0$   &$2$   &$15$   &$17$   &$13$ \\
 libaom   &ALL   &$19729$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
 \hline
-TOTAL BUGS   &   &   &$43$   &$117$   &$50$   &$210$   &$71$          \\
+TOTAL BUGS   &   &   &$43$   &$106$   &$38$   &$187$   &$72$          \\
 \hline
 \end{tabular}
 \end{adjustbox}{}
@@ -157,7 +157,7 @@ The above table shows the aggregated results for FuzzBench, dividing bugs per ca
 
 It is immediate to see that all bugs originated from the "SBFT '23" benchmarks, which was unexpected given that these programs have been already tested extensively during the tool competition hosted by this conference more than a year ago, especially the "assimp" projects that is responsible for the majority of them. On the other hand, all the standard FuzzBench benchmarks did not produce any bugs except for "bloaty", whose bugs were already known and found in the OSS-Fuzz issue tracker.
 
-These results show the effectiveness of continuously testing and maintaining up to date your projects, especially considering that FuzzBench tests these projects on older versions that the one that was used for these tests. 
+These results show the effectiveness of continuously testing and maintaining up to date your projects, especially considering that FuzzBench tests these projects on older versions than the one used for these tests. 
 
 \ziosaba{not really sure what else to say}
 
