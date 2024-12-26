@@ -167,11 +167,16 @@ These results show the effectiveness of continuously testing and maintaining up 
 
 
 \newpage
-\subsection{Case study: ???}
-\ziosaba{maybe ASSIMP, which yielded the highest number of bugs?}
+\subsection{Case study: ASSIMP}
+The \textit{"Open Asset Import Library"} (abbreviated \textit{ASSIMP)} \cite{assimp} is a cross-platform library to import 3D models into a shared, in-memory immediate format, also providing a common API for different 3D asset file formats.
 
+Its analysis yielded a total of 160 bugs, 96 of which were unreported, divided as follows: 1 stack-buffer-overflow, 1 stack-overflow, 71 heap-buffer-overflows, 20 crashes and 3 undefined behaviors. The stack-buffer-overflow error was related to a \verb|memcpy| invocation not properly checking the length of the involved buffers, eventually overriding the stack and causing a segmentation fault. The stack-overflow was triggered by an \verb|open| function triggered in a never-ending loop, eventually leading to stack exhaustion. The heap-buffer-overflows and crashes were mostly related to improper sanitizations of user inputs when performing memory accesses, eventually also leading to segmentation faults.
 
+All the aforementioned scenarios are some of the most common methodologies that malicious people use when exploiting a program in order to gain control of your system, therefore fixing them would be crucial. Given the high number of bugs and the fact that some of them could lead to vulnerabilities in the program, this is the only report in this work that was presented to the developers as a "Security Report", a particular type of report on GitHub that users may create when faced with potentially real security threats that should be addresses as soon as possible and have a CVE assigned, to ensure that all users will update their program and avoid using that specific version where the vulnerability was present.
 
+\ziosaba{Waiting for response, add more later...}
+
+Given the importance of this project, as its popularity and widespread usage allowed it to enter the strict OSS-Fuzz eligibility requirements, we argue it is unacceptable to have this many unresolved bugs.
 
 
 \newpage
