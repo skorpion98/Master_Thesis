@@ -14,10 +14,11 @@ At the moment of writing, unfortunately, not all developers answered and/or ackn
 
 
 
-
-\section{OSS-Fuzz (aggiornare la tabella fino all'ultimo!)} \label{ossfuzz-table}
-\begin{adjustbox}{width=\textwidth,center}
-\begin{tabular}{|l|l|l|l|l|l|l|l|l|}
+\newpage
+\section{OSS-Fuzz (aggiornare la tabella fino all'ultimo!)}
+\begin{table}[h!]
+\small
+\makebox[0.95\textwidth]{\begin{tabular}{|l|l|l|l|l|l|l|l|l|}
 \hline
 \textbf{Project} & \textbf{Sanitizers} & \textbf{Queue size} & \textbf{Crashes} & \textbf{ASan} & \textbf{Valgrind} & \textbf{UBSan} & \textbf{Total} & \textbf{Confirmed}  \\ 
 \hline
@@ -27,11 +28,11 @@ imagemagick      & ALL                 & $9,470$             & $0$              
 libxml2          & ALL                 & $13,474$            & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
 skia             & ALL                 & $18,295$            & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\ 
 \hline
-\ziosaba{???}      & A+M                 & \ziosaba{???}             & \ziosaba{???}              & \ziosaba{???}           & \ziosaba{???}        & \ziosaba{???}            & \ziosaba{???}           & \ziosaba{???}               \\
 gpsd    & A+M                 & $5404$               & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
 libyang          & A+M                 & $8,745$             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
 openjpeg         & A+M                 & $8,856$             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
-wasmedge         & A+M                 & $9,454$             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\ 
+wasmedge         & A+M                 & $9,454$             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
+???         & A+M                 & $???$             & $???$              & $???$           & $???$           & $???$            & $???$             & $???$                 \\
 \hline
 cairo            & A+UB                & $15,870$            & $0$              & $1$           & $1$           & $28$           & $30$            & $0$                 \\
 clamav           & A+UB                & $6,742$             & $0$              & $0$           & $0$           & $2$            & $2$             & $0$                 \\
@@ -53,12 +54,12 @@ serenity         & NONE                & $9,940$             & $0$              
 \hline
 TOTAL BUGS   &   &   &$4$   &$6$   &$80$   &$56$   &$145$   &$103$       \\
 \hline
-\end{tabular}
-\end{adjustbox}{}
-\ \\ 
-
-\matteo{Refer to table as "Table~\ref{xxx}", not as "above/below table". Do not try to force latex to place things the way you want, but let it do its things and use labels to refer to things. When you create a table you can also suggest latex where to put it using "[h]" or "[h!]", but in the end let it decide. This is also true for newlined and newpages, btw.}
-The above table shows the aggregated results for OSS-Fuzz, dividing bugs per category and showing the total number of bugs found compared to the number of bugs that were confirmed by the respective developers after being reported. While it's important to note that this is a very small subset of projects tested (25 out of 1000+) and is not representative of the entire OSS-Fuzz campaign, it is still a good indicator that there are indeed bugs that these frameworks are missing.
+\end{tabular}}
+\vspace{10pt}
+\caption{Bugs collected by OSS-Fuzz projects}
+\label{ossfuzz-table}
+\end{table}
+Table \ref{ossfuzz-table} shows the aggregated results for OSS-Fuzz, dividing bugs per category and showing the total number of bugs found compared to the number of bugs that were confirmed by the respective developers after being reported. While it's important to note that this is a very small subset of projects tested (25 out of 1000+) and is not representative of the entire OSS-Fuzz campaign, it is still a good indicator that there are indeed bugs that these frameworks are missing.
 
 \matteo{Yeah, we need to rethink this based on the new experiments we have to do. Since we did not find anything in other MSan + ASan projects we might think of ignoring this category as a whole for the moment.}
 This analysis found a total of 145 bugs (an average of 5.8 bugs per project), mostly originated by all projects that were not tested with all sanitizers: this scenario was to be expected, as it would make sense for projects that are being tested as thoroughly as possible to also have less undetected bugs. This is also a good example of how adding a sanitizer to your development cycle is beneficial to the program. However, additional testing is not a replacement for programs written following good coding practices: "Ghostscript" uses MSan yet it has the highest number of memory-related bugs, "Cairo" uses UBSan yet it has the highest number of undefined-behavior bugs. \ziosaba{FIX PREVIOUS PHRASE AFTER NEW PROJECT}
@@ -118,9 +119,10 @@ Instead, when the problems have low or negligible priority (like the undefined-b
 
 
 \newpage
-\section{FuzzBench (aggiornare la tabella fino all'ultimo!)} \label{fuzzbench-table}
-\begin{adjustbox}{width=\textwidth,center}
-\begin{tabular}{|l|l|l|l|l|l|l|l|}
+\section{FuzzBench (aggiornare la tabella fino all'ultimo!)}
+\begin{table}[h]
+\small
+\makebox[0.96\textwidth]{\begin{tabular}{|l|l|l|l|l|l|l|l|}
 \hline
 \textbf{Project} & \textbf{Sanitizers} & \textbf{Queue size} & \textbf{Crashes} & \textbf{ASan} & \textbf{UBSan} & \textbf{Total} & \textbf{Confirmed}  \\ 
 \hline
@@ -128,9 +130,8 @@ bloaty   &NONE   &$2349$   &$0$   &$0$   &$2$   &$2$   &$2$ \\
 curl   &NONE   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
 freetype2   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
 harfbuzz   &ALL   &$34634$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
-freetype2   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
-harfbuzz   &ALL   &$34634$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
 jsoncpp   &A+UB   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
+lcms   &ALL   &$30526$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
 libjpeg-turbo   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
 libpcap   &ALL   &$111$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
 libpng   &ALL   &$0$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
@@ -157,11 +158,12 @@ libaom   &ALL   &$19729$   &$0$   &$0$   &$0$   &$0$   &$0$ \\
 \hline
 TOTAL BUGS   &   &   &$43$   &$106$   &$38$   &$187$   &$74$          \\
 \hline
-\end{tabular}
-\end{adjustbox}{}
-\ \\ 
-
-The above table shows the aggregated results for FuzzBench, dividing bugs per category and showing the total number of bugs found compared to the number of bugs that were confirmed by the respective developers after being reported. For the sake of completeness, the table also distinguishes between the standard FuzzBench benchmarks (above) and the "SBFT '23" benchmarks (below), and reports the sanitizers regularly used by the OSS-Fuzz counterpart of the above projects.
+\end{tabular}}
+\vspace{10pt}
+\caption{Bugs collected by Fuzzbench and SBFT'23 benchmarks}
+\label{fuzzbench-table}
+\end{table}
+Table \ref{fuzzbench-table} shows the aggregated results for FuzzBench, dividing bugs per category and showing the total number of bugs found compared to the number of bugs that were confirmed by the respective developers after being reported. For the sake of completeness, the table also distinguishes between the standard FuzzBench benchmarks (above) and the "SBFT '23" benchmarks (below), and reports the sanitizers regularly used by the OSS-Fuzz counterpart of the above projects.
 
 It is immediate to see that all bugs originated from the "SBFT '23" benchmarks, which was unexpected given that these programs have been already tested extensively during the tool competition hosted by this conference more than a year ago, especially the "assimp" projects that is responsible for the majority of them. On the other hand, all the standard FuzzBench benchmarks did not produce any bugs except for "bloaty", whose bugs were already known and found in the OSS-Fuzz issue tracker.
 

@@ -7,7 +7,7 @@ In the context of this thesis, we define an overlooked bug as a bug for which a 
 In OSS-Fuzz, where fuzzing is performed automatically, we are looking for cases where machines have failed: this could happen either due to a fault in the automation process or due to the integration choices made by the developers. In the former case, a fuzzer may succeed in producing a test case that triggers a bug, but due to some problems in the implementation of the testing environment it is not successfully reported as such. In the latter case, it is strictly related to the content of the \textit{project.yaml} configuration file: different sanitizers look for different types of bugs, while each fuzzing engine uses its own set of strategies to test a program, producing results that may be completely different from the other provided fuzzers. Given this, OSS-Fuzz was analyzed by taking a small selection of projects and testing them locally on the latest version with a fixed combination of fuzzing engine and sanitizers, using the latest public fuzzing queue available on the project's repository as the input corpus. 
 
 \matteo{In here you are giving for granted that the reader knows fuzzbench uses older versions of the program, but you never mentioned it. This was part of a comment I wrote about fuzzbench in previous chapter and that you removed without fully addressing it, be careful about it! (the comment provided you a list of things you should add in the fuzzbench sections, I think you only added like half of it, while leaving the most important one out, i.e. the fact that fuzzbench uses older verisons)}
-In FuzzBench, where projects are actively tested by several different fuzzers, we are looing for bugs discovered in older versions that were not tested on newer ones, which obviously is a human error. A small selection of projects from OSS-Fuzz are tested continuously by several different fuzzers, producing daily reports available both to the fuzzers and the chosen projects developers, along with public access to the corpora used to perform the tests as well as the results and the crashes found (if any). It is then responsibility of the project developers to analyze and fix these bugs, although this does not always happen. Given this, FuzzBench was analyzed by testing all available benchmarks and the ones from the SBFT '23 conference (see \ref{conference}), building the projects to their latest version with the same combination of fuzzing engine and sanitizers as OSS-Fuzz, and using as input corpus all the available crashes for each benchmark found in all fuzzing session that are publicly accessible between 2020 and October 2024 (at the moment of testing).
+In FuzzBench, where projects are actively tested by several different fuzzers, we are looking for bugs discovered in older versions that were not tested on newer ones, which obviously is a human error. A small selection of projects from OSS-Fuzz are tested continuously by several different fuzzers, producing daily reports available both to the fuzzers and the chosen projects developers, along with public access to the corpora used to perform the tests as well as the results and the crashes found (if any). It is then responsibility of the project developers to analyze and fix these bugs, although this does not always happen. Given this, FuzzBench was analyzed by testing all available benchmarks and the ones from the SBFT '23 conference (see \ref{conference}), building the projects to their latest version with the same combination of fuzzing engine and sanitizers as OSS-Fuzz, and using as input corpus all the available crashes for each benchmark found in all fuzzing session that are publicly accessible between 2020 and October 2024 (at the moment of testing).
 
 As previously mentioned, all relevant bugs were then appropriately reported to their respective developers.
 
@@ -80,68 +80,55 @@ This analysis was performed on all bugs between 2023-01-01 and 2024-06-31, for a
 The second to last step was to analyze the JSON files and make a list of the most buggy projects for each category, which was done by writing a simple Python script that takes as input these files and analyzes the information fields collected, shown in the above figure. First, it checks the \textit{"metadata"} field for values such as "WontFix", "Duplicate" or "Invalid": the first means that the developers themselves tagged that specific bug as non-relevant and therefore will not be addressed in the future, the second refers to a report for a bug that has been already issued but was triggered by a different testcase, while the last one means that the reported bug could not be reliably reproduced using the provided testcase. Then, it checks the \textit{"description"} field for manual reports, that have been ignored as the information they contained were not always written according to the same standard used by ClusterFuzz and therefore not useful towards the collection of the information required. Assuming the report analyzed is valid and generated by ClusterFuzz, it retrieved the project name from the \textit{"oss\_fuzz\_bug\_report"} fields, using a dictionary key-value to keep track of the number of bugs reported for each project. 
 
 \newpage
+The final step was to analyze all the bugs reported by each project individually and determine which fuzz target produced the highest number of reports. Given the previous script, I extended it to take the project name as input, so that the parsing of the JSON file focused only on reports for that particular project, and the dictionary key-value was now used to keep track of the number of bugs produced by each fuzzing target binary. 
 
-\matteo{Why are you using a screen from vscode (or whatever it is) instead of doing a latex table? If 50 subjects do not fit in one page you could divide it into more columns}
-\begin{figure}[h]
-\centering
-\includegraphics[scale=0.47]{foto/list.png}
-\caption{Excerpt of the 50 most bugged projects}
-\label{fig:list}
-\end{figure}
+All the aforementioned work produced table \ref{fuzzing-table}, which shows all the selected projects and their respective most bugged binaries tested:
+\begin{table}[h!]
+\makebox[\textwidth]{\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Project} & \textbf{Sanitizer} & \textbf{Tested binary} \\ 
+\hline
+binutils         & ALL                 & fuzz\_objdump\_safe            \\
+harfbuzz         & ALL                 & hb-subset-fuzzer               \\
+imagemagick      & ALL                 & encoder\_heic\_fuzzer          \\
+libxml2          & ALL                 & valid                          \\
+skia             & ALL                 & skruntimeeffect                \\ 
+\hline
+gpsd             & A+M                 & FuzzPacket                     \\
+libyang          & A+M                 & lyd\_parse\_mem\_json          \\
+openjpeg         & A+M                 & opj\_decompress\_fuzz\_J2K     \\
+wasmedge         & A+M                 & wasmedge-fuzztool              \\
+???              & A+M                 & ???                         \\
+\hline
+cairo            & A+UB                & svg-render-fuzzer              \\
+clamav           & A+UB                & clamav\_dbload\_YARA\_fuzzer   \\
+freerdp          & A+UB                & TestFuzzCoreClient             \\
+tarantool        & A+UB                & luaL\_loadbuffer\_fuzzer       \\
+vlc              & A+UB                & vlc-demux-dec-libfuzzer        \\ 
+\hline
+fwupd            & ASan only                & uswid\_fuzzer             \\
+glslang          & ASan only                & compile\_fuzzer           \\
+inchi            & ASan only                & inchi\_input\_fuzzer      \\
+radare2          & ASan only                & ia\_fuzz                  \\
+zeek             & ASan only                & zeek-ftp-fuzzer           \\ 
+\hline
+fluent-bit       & NONE                & flb-it-fuzz-cmetric\_decode\_fuzz\_OSSFUZZ         \\
+gpac             & NONE                & fuzz\_probe\_analyze                               \\
+libdwarf         & NONE                & fuzz\_debug\_str                                   \\
+libredwg         & NONE                & llvmfuzz                                           \\
+serenity         & NONE                & FuzzJs                                             \\
+\hline
+\end{tabular}}
+\vspace{10pt}
+\caption{Open-source projects tested and fuzzing binaries analyzed}
+\label{fuzzing-table}
+\end{table}
 
-The final step was to analyze all the bugs reported by each project individually and determine which fuzz target produced the highest number of reports. Given the previous script, I extended it to take the project name as input, so that the parsing of the JSON file focused only on reports for that particular project, and the dictionary key-value was now used to keep track of the number of bugs produced by each fuzzing target binary.
+
+
 
 
 \newpage
-All of this has resulted in the following projects and binaries being tested:
-\matteo{Wouldn't it be better to make a table out of this as well? (this is a minor thing though)}
-\begin{itemize}
-  \item \textbf{All Sanitizers}
-  \begin{itemize}
-    \item binutils (fuzz\_objdump\_safe)
-    \item harfbuzz (hb-subset-fuzzer)
-    \item imagemagick (encoder\_heic\_fuzzer)
-    \item libxml2 (valid)
-    \item skia (skruntimeeffect)
-  \end{itemize}
-  \item \textbf{ASan + MSan}
-  \begin{itemize}
-    \item ghostscript (gs\_device\_pdfwrite\_fuzzer)
-    \item libyang (lyd\_parse\_mem\_json)
-    \item wasmedge (wasmedge-fuzztool)
-    \item openjpeg (opj\_decompress\_fuzz\_J2K)
-    \item myanmar-tools (zawgyi\_detector\_fuzz\_target)
-  \end{itemize}
-  \item \textbf{ASan + UBSan}
-  \begin{itemize}
-    \item cairo (svg-render-fuzzer)
-    \item clamav (clamav\_dbload\_YARA\_fuzzer)
-    \item freerdp (TestFuzzCoreClient)
-    \item tarantool (luaL\_loadbuffer\_fuzzer)
-    \item vlc (vlc-demux-dec-libfuzzer)
-  \end{itemize}
-  \item \textbf{ASan only}
-  \begin{itemize}
-    \item fwupd (uswid\_fuzzer)
-    \item glslang (compile\_fuzzer)
-    \item inchi (inchi\_input\_fuzzer)
-    \item radare2 (ia\_fuzz)
-    \item zeek (zeek-ftp-fuzzer)
-  \end{itemize}
-  \item \textbf{No Sanitizers}
-  \begin{itemize}
-    \item fluent-bit (flb-it-fuzz-cmetric\_decode\_fuzz\_OSSFUZZ)
-    \item gpac (fuzz\_probe\_analyze)
-    \item libdwarf (fuzz\_debug\_str)
-    \item libredwg (llvmfuzz)
-    \item serenity (FuzzJs)
-  \end{itemize}
-\end{itemize}
-
-
-
-
-
 \subsection{Testing with OSS-Fuzz} \label{test}
 The OSS-Fuzz repository contains several python scripts to build and test the available projects as well as debugging and reproducing crashes and bugs. Most of the tools used in this work are provided by the "helper.py" script, which I used to download a project's Docker image, build the fuzzers and download the lastest public corpora made available by the developers, using the following commands:
 \begin{verbatim}
@@ -316,38 +303,49 @@ Similarly to the process shown in section \ref{selection}, I wrote a simple Pyth
 
 Regarding the selection of the projects and fuzz targets to test, while the initial idea was to perform the analysis only on the benchmarks provided by FuzzBench, it was later decided to also include the special benchmarks added during the "SBFT '23" conference (refer to \ref{conference}) due to the overwhelmingly amount of bugs discovered when performing preliminary tests on them.
 
-Finally, to retrieve all possible crashes from the bug-oriented experiments performed in 2020-2023 and all experiments from 2024, I used the \textit{gsutil} suite provided by Google, which works similarly to the \verb|ls|, \verb|mv| and \verb|cp| command of the Linux shell, except that it takes as argument the URL of a Google Cloud resource. To construct the URL of all the resources needed, I wrote a Python script that essentially performs horizontal scraping over the directory tree shown before (Figure \ref{fig:tree}), storing at each intermediate steps the link of the next resource to list using the \verb|gsutil ls| command.
-\ \\ 
+Finally, to retrieve all possible crashes from the bug-oriented experiments performed in 2020-2023 and all experiments from 2024, I used the \textit{gsutil} suite provided by Google, which works similarly to the \verb|ls|, \verb|mv| and \verb|cp| command of the Linux shell, except that it takes as argument the URL of a Google Cloud resource. To construct the URL of all the resources needed, I wrote a Python script that essentially performs horizontal scraping over the directory tree shown before (Figure \ref{fig:tree}), storing at each intermediate steps the link of the next resource to list using the \verb|gsutil ls| command. This analysis yielded 971656 zip file, for a total of 9 milion crashes to test.
 
-In conclusion, this analysis yielded 971656 zip file, a total of 9 milion crashes to test, and the following projects and fuzz targets being tested:
-
-\noindent
-\begin{tabularx}{\textwidth}{
-    @{\hspace{2em}}% Space for left bullet
-    >{\leavevmode\llap{\textbullet~}\raggedright\rule{0pt}{4ex}}% Left bullet + formatting of column
-    X% Left column specification
-    @{\quad\hspace{1em}}% Space between columns + right bullet space
-    >{\leavevmode\llap{\textbullet~}\raggedright\arraybackslash}% Right bullet + formatting of column
-    X% Right column specification
-    @{}% No column space on right
-  }
-  arrow (parquet-arrow-fuzz) & aspell (aspell\_fuzzer) \\
-  assimp (assimp\_fuzzer) & bloaty (fuzz\_target) \\
-  curl (curl\_fuzzer\_http) & ffmpeg (ffmpeg\_demuxer\_fuzzer) \\
-  file (magic\_fuzzer) & freetype2 (ftfuzzer) \\
-  grok (grk\_decompress\_fuzzer) & harfbuzz (hb-shape-fuzzer) \\
-  jsoncpp (jsoncpp\_fuzzer) & lcms (cms\_transform\_fuzzer) \\
-  libaom (av1\_dec\_fuzzer) & libjpeg-turbo (libjpeg\_turbo\_fuzzer) \\
-  libpcap (fuzz\_both) & libpng (libpng\_read\_fuzzer) \\
-  libxml2 (xml) & mbedtls (fuzz\_dtlsclient) \\
-  openssl (x509) & openthread (ot-ip6-send-fuzzer) \\
-  php (php-fuzz-parser) & proj4 (proj\_crs\_to\_crs\_fuzzer) \\
-  re2 (re2\_fuzzer) & sqlite3 (ossfuzz) \\
-  systemd (fuzz-link-parser) & vorbis (decode\_fuzzer) \\
-  woff2 (convert\_woff2ttf\_fuzzer) & zlib (zlib\_uncompress\_fuzzer)  
-\end{tabularx}
-
-
+All the aforementioned work produced table \ref{fuzzing-table-2}, which shows the standard FuzzBench benchmarks (above) and the SBFT'23 benchmarks (below) along with their respective binaries tested:
+\begin{table}[h]
+\makebox[\textwidth]{\begin{tabular}{|l|l|}
+\hline
+\textbf{Project} & \textbf{Tested binary}  \\
+\hline
+bloaty   &   fuzz\_target                       \\
+curl   &   curl\_fuzzer\_http                   \\
+freetype2   &   ftfuzzer                        \\
+harfbuzz   &   hb-shape-fuzzer                  \\
+jsoncpp   &   jsoncpp\_fuzzer                   \\
+lcms   &   cms\_transform\_fuzzer               \\
+libjpeg-turbo   &   libjpeg\_turbo\_fuzzer      \\
+libpcap   &   fuzz\_both                        \\
+libpng   &   libpng\_read\_fuzzer               \\
+libxml2   &   xml                               \\
+mbedtls   &   fuzz\_dtlsclient                  \\
+openssl   &   x509                              \\
+openthread   &   ot-ip6-send-fuzzer             \\
+php   &   php-fuzz-parser                       \\
+proj4   &   proj\_crs\_to\_crs\_fuzzer          \\
+re2   &   re2\_fuzzer                           \\
+sqlite3   &   ossfuzz                           \\
+systemd   &   fuzz-link-parser                  \\
+vorbis   &   decode\_fuzzer                     \\
+woff2   &   convert\_woff2ttf\_fuzzer           \\
+zlib   &   zlib\_uncompress\_fuzzer             \\
+\hline
+arrow   &   parquet-arrow-fuzz                     \\
+aspell   &   aspell\_fuzzer                        \\
+assimp   &   assimp\_fuzzer                        \\
+ffmpeg   &   ffmpeg\_demuxer\_fuzzer               \\
+file   &   magic\_fuzzer                           \\
+grok   &   grk\_decompress\_fuzzer                 \\
+libaom   &   av1\_dec\_fuzzer                      \\
+\hline
+\end{tabular}}
+\vspace{10pt}
+\caption{Fuzzbench and SBFT'23 benchmarks tested and fuzzing binaries analyzed}
+\label{fuzzing-table-2}
+\end{table}
 
 
 
@@ -382,7 +380,7 @@ this is because all FuzzBench benchmarks are compiled using a custom combination
         -v /home/zio-saba/Scrivania/TESI/logfiles/:/logfiles/  
         -it  gcr.io/oss-fuzz/{project_name} /bin/bash
 \end{verbatim}
-As previously shown, the first parameters are needed to create a privileged instance of Docker, specify the running platform on which the fuzz targets will be tested and limit the container memory usage, the arguments starting with \verb|-e| override the environment variables provided by the Docker image, the arguments starting with \verb|-v| are used to create shared directories and the last line invokes the project image to load as well as making it interactive by spawning a \verb|/bin/bash| process.
+As previously shown, the first parameters are needed to create a privileged instance of Docker, specify the running platform on which the fuzz targets will be tested and limit the container memory usage, the arguments starting with \verb|-e| override the environment variables provided by the Docker image, the ones starting with \verb|-v| are used to create shared directories and the last line invokes the project image to load as well as making it interactive by spawning a \verb|/bin/bash| process.
 Given that the container accepts only one sanitizer at a time, I had to specify both ASan and UBSan flags in the same variable storing the ASan sanitizer flags, using as reference the subset of UBSan flags used by default by FuzzBench \cite{flags}.
 
 \newpage
