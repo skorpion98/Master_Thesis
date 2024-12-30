@@ -1,17 +1,12 @@
 \chapter{Results} \label{chap_4}
-
-\matteo{Bug deduplication may require a section  on its own; it is an interesting thing to describe! You should probably put it at the end of the previous chapter (i.e. methodology) and explain in detail how we performed it. Do not describe the scripts you used, but talk about things like callstack deduplication (k=3) for ASan and valgrind (and spontaneous crashes IIRC?), while for UBSan we looked at both the address and the type of the bug.}
-
-To correctly analyze and categorize the bugs discovered you need to perform \textit{bug deduplication}, a technique used to remove all inputs that produced the same results, which is crucial to remove unnecessary data from the results and make the bug analysis work less tedious for the developer. There are several strategies that can be applied to deduplicate bugs, but it is important to mention that there is no fool-proof methodology that produces perfect results on all possible scenarios, and this is because which information you are using as reference and their number will (almost always) lead to partial loss of data.
-
-\ziosaba{REWRITE THIS PARAGRAPH, BUG DEDUPLICATION EXPLAINED BEFORE}
-
-Given that this work focused primarily on frameworks based on ClusterFuzz as the back-end, I decided to employ the same approach used by ClusterFuzz when generating bug reports, where the fields "Crash Type" and "Crash state" are the main references (see figure \ref{fig:issue}). To do this, I used several Python scripts (one for each sanitizer and one for Valgrind) that analyzed the logs generated during each fuzzing sessions, and deduplication was performed by its \textit{"error type"} and the last 3 stack entries from where the error occurred.
+\ \\
+All collected bugs were appropriately deduplicated according to the methodology described in \ref{bug_dedup}: to do this, I used several Python scripts (one for each sanitizer and one for Valgrind) that analyzed the logs generated during each fuzzing sessions, and deduplication was performed using as reference the error type and the last 3 stack entries from where the error occurred.
 
 Then, \textit{bug triage} was performed, analyzing more in depth where the bug occurred, why it happened and assigning a priority in the range "Low", "Medium" and "High". This required a manual investigation of each bug individually, statically and dynamically (when available), to have a more clear understanding of the problem and potentially provide suggestions to the developers regarding the fix.
-This step was also important to refine the previous deduplication step.  Assume the situation where two inputs triggered two (apparently) different bugs because they have distinct stack flows: if the bug originated from the same function, it meant that two different execution flows triggered the same error. In this case, a common practice is to fix one of them and then use the other input as an additional check for correctness.
+This step was also important to refine the previous deduplication step, as two inputs that triggered (apparently) different bugs may only have distinct stack flows: if the bug originated from the same function, it meant that two different execution flows triggered the same error. In this case, a common practice is to fix one of them and then use the other input as an additional check for correctness.
 
-Finally, all recorded bugs for a project, along with their log and fuzz targets, were reported to their respective developers.
+Finally, all recorded bugs for a project, along with their log and fuzz targets, were reported to their respective developers according to their preferred communication method: almost all reports were sent using GitHub's integrated issue tracker, some required a subscription to a proprietary issue tracking platform, and a few of them were sent via emails.
+
 At the moment of writing, unfortunately, not all developers answered and/or acknowledged the reported bugs.
 
 
@@ -30,11 +25,10 @@ imagemagick      & ALL                 & $9,470$             & $0$              
 libxml2          & ALL                 & $13,474$            & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
 skia             & ALL                 & $18,295$            & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\ 
 \hline
-gpsd    & A+M                 & $5404$               & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
+gpsd             & A+M       & $5404$  & $0$                 & $0$              & $0$           & $0$           & $0$             & $0$                 \\
 libyang          & A+M                 & $8,745$             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
 openjpeg         & A+M                 & $8,856$             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
 wasmedge         & A+M                 & $9,454$             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
-???         & A+M                 & $???$             & $???$              & $???$           & $???$           & $???$            & $???$             & $???$                 \\
 \hline
 cairo            & A+UB                & $15,870$            & $0$              & $1$           & $1$           & $28$           & $30$            & $0$                 \\
 clamav           & A+UB                & $6,742$             & $0$              & $0$           & $0$           & $2$            & $2$             & $0$                 \\
@@ -92,12 +86,17 @@ The remaining 25 memory bugs were all related to use-of-uninitialized-memory (UU
     \item \textit{invalid read of size [...]}: happens when a read/write operation performed overruns the provided buffer, as the content outside of a buffer could be anything
 \end{itemize}
 
-After reporting the UUM bugs and having the pleasure of interacting with the CEO of GPAC itself, we were happy to discover all bugs fixed in just few days. Also the developers were grateful for this contribution, as they have recently been battling with seemingly-random bugs causing disruptions with the normal functionality of the program, therefore the report has been valuable in helping them to remove uninitialized variables that were leading to undefined behavior.
+After reporting the UUM bugs and having the pleasure of interacting with the CEO of GPAC itself, we were happy to discover all bugs fixed in just few days. The developers created a public commit \cite{gpac_commit} to explain the issues discovered and reassure everyone that they did not pose a security concern, as they believe the path to exploitation is difficult. However, they agreed on the fact that such bugs could be resolved by trivial and obvious corrections, and the existence of such issues show that they need to be more vigilant: specifically, most of the problems mentioned originated from local structures declared but left uninitialized, and buffer-related operations with no checks regarding the size of the data passed to the buffer as well as recalling that most read/write function return the number of bytes actually read/written.
+They concluded by expressing their gratitude, as they have recently been battling with seemingly random bugs causing disruptions with the normal functionality of the program, therefore the report has been valuable in helping them to remove uninitialized variables that were leading to undefined behavior.
+
+This project was a clear example on the importance of using sanitizers during tests, as they highlighted simple and trivial errors that would otherwise be easily overlooked during a manual analysis of the code, but still that greatly helped them in improving the user experience by removing unwanted behavior.
 
 
-\matteo{Some interesting things we can say to expand this section: 1) importance of having sanitizers on OSS-Fuzz (gpac does not have any) 2) say something about the public commit they made about our report (I am just talking about the text, I'll link it in a comment below) like the functional concerns and the good practices 3) maybe describe one of the bugs (read briefly the commit to see if you can spot easily the root cause of one of the bugs and describe it briefly here; no need to copy paste code or add images)}
 
-%https://github.com/gpac/gpac/pull/2965
+
+
+
+
 
 \newpage
 \subsection{Case study: VLC}
@@ -112,11 +111,7 @@ Finally, the undefined-behavior (UB) bugs were all related to signed integer-ove
 
 This project was a clear example of the most common behavior encountered during this work when interacting with open-source developers.
 When presented with bugs that could potentially lead to vulnerabilities or problems in the normal functionalities of their program, their response is usually quick and the problem is fixed in a short amount of time. 
-Instead, when the problems have low or negligible priority (like the undefined-behavior bugs), they either ignore the reports or acknowledge their existence and postpone them indefinitely. 
-
-\matteo{Make a new subsection and talk about what can we learn about this, and how can this issue be fixed by Google.}
-\ziosaba{Why not moving this topic in the "Discussion" section?}
-\matteo{Makes sense, discuss this "perceived priority" in the discussion section.}
+Instead, when the problems have low or negligible priority (like the undefined-behavior bugs), they either ignore the reports or acknowledge their existence and postpone them indefinitely.
 
 
 
@@ -182,15 +177,16 @@ These results show the effectiveness of continuously testing and maintaining up 
 \subsection{Case study: ASSIMP}
 The \textit{"Open Asset Import Library"} (abbreviated \textit{ASSIMP)} \cite{assimp} is a cross-platform library to import 3D models into a shared, in-memory immediate format, also providing a common API for different 3D asset file formats.
 
-Its analysis yielded a total of 160 bugs, 96 of which were unreported, divided as follows: 1 stack-buffer-overflow, 1 stack-overflow, 71 heap-buffer-overflows, 20 crashes and 3 undefined behaviors. The stack-buffer-overflow error was related to a \verb|memcpy| invocation not properly checking the length of the involved buffers, eventually overriding the stack and causing a segmentation fault. The stack-overflow was triggered by an \verb|open| function triggered in a never-ending loop, eventually leading to stack exhaustion. The heap-buffer-overflows and crashes were mostly related to improper sanitizations of user inputs when performing memory accesses, eventually also leading to segmentation faults.
-
-
-\matteo{I would avoid writing this. We contacted all the authors according to how their security policies (that you checked); some of them were even contacted through mail (e.g. gpac). Writing that this is the only report we made through the security sections seems like we either reported the other ones in a non-secure way or that the other bugs were not security relevant.}
-All the aforementioned scenarios are some of the most common methodologies that malicious people use when exploiting a program in order to gain control of your system, therefore fixing them would be crucial. Given the high number of bugs and the fact that some of them could lead to vulnerabilities in the program, this is the only report in this work that was presented to the developers as a "Security Report", a particular type of report on GitHub that users may create when faced with potentially real security threats that should be addresses as soon as possible and have a CVE assigned, to ensure that all users will update their program and avoid using that specific version where the vulnerability was present.
+Its analysis yielded a total of 160 bugs, 96 of which were unreported, divided as follows: 1 stack-buffer-overflow, 1 stack-overflow, 71 heap-buffer-overflows, 20 crashes and 3 undefined behaviors. The stack-buffer-overflow error was related to a \verb|memcpy| invocation not properly checking the length of the involved buffers, eventually overriding the stack and causing a segmentation fault. The stack-overflow was triggered by an \verb|open| function triggered in a never-ending loop, eventually leading to stack exhaustion. The heap-buffer-overflows and crashes were mostly related to improper sanitizations of user inputs when performing memory accesses, eventually also leading to segmentation faults. All the aforementioned scenarios are some of the most common methodologies that malicious people use when exploiting a program in order to gain control of your system, therefore fixing them would be crucial.
 
 \ziosaba{Waiting for response, add more later...}
 
 Given the importance of this project, as its popularity and widespread usage allowed it to enter the strict OSS-Fuzz eligibility requirements, we argue it is unacceptable to have this many unresolved bugs.
+
+
+
+
+
 
 
 \newpage
@@ -199,16 +195,23 @@ This study has shown that developers have different approaches to bug reporting.
 
 The OSS-Fuzz reports were submitted in September, and at the time of writing there are still just under 1/3 of the bugs discovered that have yet to be acknowledged by their respective developers. 
 As previously shown, most of them were related to use-of-uninitialized-memory and undefined behaviors, but the reports received mixed responses from the developers. The majority either answered directly after the problem was fixed, or acknowledged the correctness of the bugs and the content of the report while promising to fix them in future versions, a sub-optimal approach that shows how many open-source developers either do not have enough time and resources to fix them, or they simply do not care about reports on trivial bugs that are not security relevant and postpone them (sometimes indefinitely). 
-There were some cases where the reports were accepted but with negative interactions, where the developers acknowledged the bugs but reprimanded the submitter: this was either because the work presented was effectively a duplicate of OSS-Fuzz and therefore useless (which indeed it was not), or because they thought the person who wrote them wanted to "collect yet another bug report" at their expense. Unfortunately, this highlights a bad practice when it comes to bug reporting: some developers expect the person who reports a bug to also provide a complete analysis and/or fix to lessen their work, which would obviously require extensive skills and knowledge of the project codebase, while some users send general or incomplete bug reports simply for the sake of adding a new bug under their name, which many developers consider to be harmful behavior because a buggy program will eventually become less trusted.
-Finally, there were also few cases where the submitted were rejected or simply ignored altogether. For example, when presented with a series of UUM bugs found by Valgrind, one developer replied by stating that configuring the tool to suppress a specific set of (apparently) false-positive errors from a specific list removed all the errors reported. In another case, the report was rejected because the developer did not trust the origin of the resources provided (i.e. buggy testcase and binary tested) for his own security. There was also an instance where the developer rejected the report because the provided testcase was too much specifically crafted to be a corner-case, in his opinion not effectively a real scenario that could pose a threat and therefore will not be fixed.  
+There were some cases where the reports were accepted but with negative interactions, as the developers acknowledged the bugs but reprimanded the submitter: this was either because the work presented was effectively a duplicate of OSS-Fuzz and therefore useless (which indeed it was not), or because they thought the person who wrote them wanted to "collect yet another bug report" at their expense. Unfortunately, this highlights a bad practice when it comes to bug reporting: some developers expect the person who reports a bug to also provide a complete analysis and/or fix to lessen their work, which would obviously require extensive skills and knowledge of the project codebase, while some users send general or incomplete bug reports simply for the sake of adding a new bug under their name, which many developers consider to be harmful to their popularity because a buggy program will eventually become less trusted.
+Finally, there were also few cases where the submitted reports were rejected or simply ignored altogether. For example, when presented with a series of UUM bugs found by Valgrind, one developer replied by stating that configuring the tool to suppress a specific set of (apparently) false-positive errors from a specific list removed all the errors reported. In another case, the report was rejected because the developer did not trust the origin of the resources provided (i.e. buggy testcase and binary tested) for his own security. There was also an instance where the developer rejected the report because the provided testcase was too much specifically crafted to be a corner-case, in his opinion not effectively a real scenario that could pose a threat and therefore will not be fixed.  
 
 The FuzzBench reports were submitted during December, [...] \ziosaba{TODO}
 
-Overall, most bugs were accepted and fixed (albeit not always cordially), but this work highlighted how open-source developers tend to focus on bugs that could pose a real threat to their product, rather than polishing and fixing small bugs that could still lead to unexpected behavior or unwanted interactions, ultimately leading to a worse user experience. Moreover, as discussed earlier, there is a margin of distrust between developers and users, which should be one of the key factors in the development of open-source projects (recall \ref{opensource}), but instead has gained a negative reputation due to bad habits and perhaps too many expectations from both sides.
 
-\ziosaba{partially also discussed in "Case Study" paragraphs, what to do here?}
 
-\paragraph{Perceived priority} \matteo{Say how developers seem to care more about certain reports (e.g. ASan) and care less about other (e.g. UBSan). Maybe link some vulnerabilities from the CVE database where you show that undefined behaviors can still trigger something like remote command execution or privilege escalation (go in the db and search for something like integer overflows).}
+\paragraph{Perceived priority} As already stated many times before, how developers perceive a bug report's priority varies greatly, and this difference becomes even more apparent when considering different kinds of bugs. In general, most bugs reported using ASan have been confirmed (at most) within 2 week of being reported, and then triaged and fixed shortly after. Using memory addresses incorrectly in a program will most likely cause problems on the stack and heap, easily leading into heap-based and stack-based corruption, and both scenarios are known to be some of the most popular attack vectors exploited by malicious people. Similarly, also most memory-related bugs reported using Valgrind have been confirmed and fixed in a matter of weeks. However, almost all bugs reported using UBSan have been ignored, with few exceptions: this is because undefined-behavior bugs often originate from basic arithmetic and logic operations, with a common belief that such mistakes are unlikely to be too harmful and can be addressed later. A simple search on the CVE database \cite{cve} using keywords like "integer overflow", "privilege escalation" and "remote command execution" produced thousands of results, showing how even the most basic, trivial and simple mistakes could have catastrophic consequences, therefore the behavior exhibited by the developers on this kind of bugs is unacceptable. 
+
+Overall, most reports produced were accepted and fixed (albeit not always cordially), but this work highlighted how open-source developers tend to focus on bugs that could pose a real threat to their product, rather than polishing and fixing small bugs that could still lead to unexpected behavior or unwanted interactions, ultimately leading to a worse user experience. Moreover, as discussed earlier, there is a margin of distrust between developers and users, which should be one of the key factors in the development of open-source projects (recall \ref{opensource}), but instead has gained a negative reputation due to bad habits and perhaps too many expectations from both sides.
+
+
+
+
+
+
+
 
 
 
