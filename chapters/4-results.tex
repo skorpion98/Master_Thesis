@@ -27,6 +27,7 @@ skia             & ALL                 & $18,295$            & $0$              
 \hline
 gpsd             & A+M       & $5404$  & $0$                 & $0$              & $0$           & $0$           & $0$             & $0$                 \\
 libyang          & A+M                 & $8,745$             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
+\tofix{llvm}         & A+M                 & xxx             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
 openjpeg         & A+M                 & $8,856$             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
 wasmedge         & A+M                 & $9,454$             & $0$              & $0$           & $0$           & $0$            & $0$             & $0$                 \\
 \hline
@@ -52,13 +53,15 @@ TOTAL BUGS   &   &   &$4$   &$6$   &$80$   &$56$   &$145$   &$103$       \\
 \hline
 \end{tabular}}
 \vspace{10pt}
-\caption{Bugs collected by OSS-Fuzz projects}
+\caption{Bugs collected by OSS-Fuzz projects \matteo{once we add llvm's numbers, remember to change also the "total bugs" row}}
 \label{ossfuzz-table}
 \end{table}
 Table \ref{ossfuzz-table} shows the aggregated results for OSS-Fuzz, dividing bugs per category and showing the total number of bugs found compared to the number of bugs that were confirmed by the respective developers after being reported. While it is important to note that this is a very small subset of projects tested (25 out of 1000+) and is not representative of the entire OSS-Fuzz campaign, it is still a good indicator that there are indeed bugs that these frameworks are missing.
 
-\matteo{Yeah, we need to rethink this based on the new experiments we have to do. Since we did not find anything in other MSan + ASan projects we might think of ignoring this category as a whole for the moment.}
-This analysis found a total of 145 bugs (an average of 5.8 bugs per project), mostly originated by all projects that were not tested with all sanitizers: this scenario was to be expected, as it would make sense for projects that are being tested as thoroughly as possible to also have less undetected bugs. This is also a good example of how adding a sanitizer to your development cycle is beneficial to the program. However, additional testing is not a replacement for programs written following good coding practices: "Ghostscript" uses MSan yet it has the highest number of memory-related bugs, "Cairo" uses UBSan yet it has the highest number of undefined-behavior bugs. \ziosaba{FIX PREVIOUS PHRASE AFTER NEW PROJECT}
+\matteo{Check the total number of bugs and the average after removing Ghostscript and adding llvm}
+This analysis found a total of \tofix{145} bugs (an average of \tofix{5.8} bugs per project). In total, \tofix{xxx} bugs out of \tofix{xxx} were found by enabling new sanitizers for the first time in a project: this result is expected since that software was never tested for that class of bugs and doing it for the first time will surely enough detect new bugs. On the other hand, the remaining \tofix{xxx} bugs were found using sanitizers that were already enabled in the target software; this result is more interesting because it means that even if a sanitizer is enabled, OSS-Fuzz may detect a bug but fails to report it.
+
+The analysis of the \textit{llvm} project yielded a total of \tofix{xxx} bugs. Those bugs are mostly stack exhaustion bugs which cannot reproduce outside of builds with ASan enabled. This is a known issue with ASan as it increases the size of stack objects thus exhausting the stack faster than the program would without the sanitizer; we further confirmed that, by doubling the maximum size of the stack, even the ASan build could not exhaust the stack. We still reported these issues and deferred to the developers the choice on whether these issues are relevant. The discussion is still ongoing.
 
 We can also infer the popularity of each sanitizer. ASan is the most widely used, which is reflected by the number of bugs it found. UBSan is also among the most used ones, although the statistic shown here is biased by "Cairo": while this project is affected by many UB bugs, specifically improper conversion of data between different types, almost all previous reports on the issue tracker related to similar problems were simply marked as "Wont Fix". Finally, Valgrind's memory analysis via the "Memcheck" tool yielded the highest number, highlighting how MSan was often not used by developers during tests due to its reports containing too many false positives.
 
