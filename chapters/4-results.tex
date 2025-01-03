@@ -164,14 +164,10 @@ Table \ref{fuzzbench-table} shows the aggregated results for FuzzBench, dividing
 
 It is immediate to see that all bugs came from the "SBFT '23" benchmarks with the exception of "bloaty", whose bugs were found in the OSS-Fuzz issue tracker. These results were unexpected given that these programs have been already tested extensively during the tool competition hosted by this conference more than a year ago, especially the "ASSIMP" projects that is responsible for the majority of them.
 
-These results show the effectiveness of continuously testing and maintaining up to date your projects, especially considering that FuzzBench tests these projects on older versions than the one used for these tests. \ziosaba{what else?}
+These results show the importance of double-checking the possible presence of a bug found in an older version of a software in the latest version as well. The bugs we found have been detected more than a year ago and have been left unreported until now: an attacker could have just downloaded data from the SBFT '23 tests and have access to security relevant bugs with very low effort.
 
 
 
-
-
-
-\newpage
 \subsection{Case study: ASSIMP}
 The \textit{"Open Asset Import Library"} (abbreviated \textit{ASSIMP}) \cite{assimp} is a cross-platform library to import 3D models into a shared, in-memory immediate format, also providing a common API for different 3D asset file formats.
 
