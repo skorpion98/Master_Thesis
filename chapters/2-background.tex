@@ -38,13 +38,12 @@ One of the most popular techniques to determine whether a particular test case w
 
 
 \newpage
-This is usually done by creating a "Control Flow Graph" (CFG) of the program, i.e. a representation in graph notation of all paths available during a single execution flow: each node in the graph represents a "basic block", i.e. a sequence of instructions or statements with no jumps, and the edges between nodes represent jumps, loops and branch construct (if-else) in the program's execution (see figure \ref{fig:cfg}). By analyzing a single execution flow and measuring the number of nodes and edges traversed, the number of functions triggered, and which branches were activated during conditional statements, the fuzzer keeps track of all paths that have yet to be explored, providing useful information when generating new testcases. 
-
-Therefore, we define \textit{interesting input} as any testcase that increases the code coverage achieved in a fuzzing session, and it is used as a reference when generating new testcases to hopefully get even more coverage.
+This is usually done by creating a "Control Flow Graph" (CFG) of the program, i.e. a representation in graph notation of all paths available during a single execution flow: each node in the graph represents a "basic block", i.e. a sequence of instructions or statements with no jumps, and the edges between nodes represent jumps, loops and branch construct (if-else) in the program's execution (see figure \ref{fig:cfg}). By analyzing a single execution flow and measuring the number of nodes and edges traversed, the number of functions triggered, and which branches were activated during conditional statements, the fuzzer keeps track of all paths that have yet to be explored, providing useful information when generating new testcases. Therefore, we define \textit{interesting input} as any testcase that increases the code coverage achieved in a fuzzing session, and it is used as a reference when generating new testcases to hopefully get even more coverage.
 
 
 \subsection{What is a fuzzer}  \label{fuzzers}
 A \textit{fuzzer} is the tool performing fuzz testing, taking as inputs the program being tested and a set of testcases that will be used during the fuzzing session. It is responsible for executing the program against all the provided inputs in an automated manner, analyzing each execution for potential unwanted behavior, and producing new and useful testcases for future fuzzing sessions that will attempt to trigger new execution flows and even more bugs.
+\newline
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.46]{foto/fuzzing_workflow.png}
