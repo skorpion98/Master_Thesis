@@ -1,8 +1,5 @@
 # The Bugs We Left Behind: Evaluating Autonomous Fuzzing Infrastructures for Overlooked Bugs and Vulnerabilities
 
-
-## Abstract
-
 In a world that relies on digital systems, the security of software applications is a crucial property to protect both people and their assets from cyberattacks. To this end, numerous techniques have been proposed that can detect a wide range of vulnerabilities before they can be exploited by malicious entities.
 One of the most prominent example is *Fuzz Testing*, a technique that works by repeatedly running the tested software, generating new inputs each time to exercise as many functionalities of the code as possible: the key idea is that by generating different inputs, the fuzzer will eventually produce one that is capable of triggering a bug.
 Thanks to their fuzzing strategies, fuzzers shine in producing inputs that allow them to execute new code as testing time passes: however, in their pursuit of constantly increasing coverage, fuzzers may miss bugs that do not cause observable behaviors at a high level. To tackle this issue, fuzzing is often used in combination with software sanitizations,
