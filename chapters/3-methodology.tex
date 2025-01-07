@@ -4,7 +4,7 @@
 The aim of this thesis was to analyze common automated testing campaigns, specifically OSS-Fuzz and FuzzBench as they are among the most popular ones, to see if there were any overlooked bugs in the projects that were integrated: specifically, we define an overlooked bug as a bug for which a triggering input is produced by the fuzzing framework, but that is not successfully reported as such. The two frameworks considered provide different opportunities for bugs to be overlooked, as OSS-Fuzz uses an automated approach to how tests are scheduled, executed, and how bugs are reported, while FuzzBench requires manual scheduling and bug reporting: this, in turn, meant studying their workflow and examining how programs are tested, to verify how efficiently such frameworks are used by open-source developers.
 As previously mentioned, all relevant bugs were then appropriately reported.
 
-In OSS-Fuzz, where fuzzing is performed automatically, we are looking for cases where machines have failed: this could happen either due to a fault in the automation process or due to the integration choices made by the developers. In the former case, a fuzzer may succeed in producing a test case that triggers a bug, but due to some problems in the implementation of the testing environment it is not successfully reported as such. In the latter, it is strictly related to the content of the \textit{project.yaml} configuration file: different sanitizers look for different types of bugs, while each fuzzing engine uses its own set of strategies to test a program, producing results that may be completely different from the other provided fuzzers. Given this, OSS-Fuzz was analyzed by taking a small selection of projects and testing them locally on latest version with a fixed combination of fuzzing engine and sanitizers, using the latest public fuzzing queue available on the project's repository as input corpus. 
+In OSS-Fuzz, where fuzzing is performed automatically, we are looking for cases where machines have failed: this could happen either due to a fault in the automation process or due to the integration choices made by the developers. In the former case, a fuzzer may succeed in producing a testcase that triggers a bug, but due to some problems in the implementation of the testing environment it is not successfully reported as such. In the latter, it is strictly related to the content of the \textit{project.yaml} configuration file: different sanitizers look for different types of bugs, while each fuzzing engine uses its own set of strategies to test a program, producing results that may be completely different from the other provided fuzzers. Given this, OSS-Fuzz was analyzed by taking a small selection of projects and testing them locally on the latest version with a fixed combination of fuzzing engine and sanitizers, using the latest public fuzzing queue available on the project's repository as input corpus. 
 
 In FuzzBench, where projects are actively tested by several different fuzzers, we are looking for bugs discovered in older versions that were not tested on newer ones, which obviously is a human error. As previously mentioned, this framework is based on a small selection of older (and bugged) versions of OSS-Fuzz projects that are continuously tested by several different fuzzers using a predefined testing environment, producing daily reports available both to the fuzzers' developers and the developers of the selected projects, along with public access to the standard corpora used to perform the tests, the results and the crashes found (if any). It is then responsibility of the project developers to analyze and fix these bugs, although this does not always happen. Given this, FuzzBench was analyzed by testing all available benchmarks and the ones from the SBFT '23 conference (see \ref{conference}), building the projects to their latest OSS-Fuzz version using AFL as fuzzing engine, ASan+UBSan as sanitizers, and using as input corpus all the available crashes for each benchmark found in all fuzzing session that were publicly accessible between 2020 and October 2024 (at the moment of testing).
 
@@ -21,7 +21,7 @@ All tests were performed on two separate machines with similar specs, both equip
 
 Regarding \textit{OSS-Fuzz}, most of the preparation was done using its GitHub repository, which was cloned locally on both machines. To provide its services, OSS-Fuzz uses several Python scripts that can be invoked from the command line with appropriate arguments: these commands can be used to update the repository and the files used to build each project, update the base images and each project image, build the project image and its fuzzers, and finally download other resources such as reports and publicly available corpora. 
 
-Regarding \textit{FuzzBench}, most of the preparation was done by incorporating the \textit{gsutil} suite in a Python script that performed web scraping and downloaded content from its Google Cloud bucket, specifically on the section where all experiments results are collected.
+Regarding \textit{FuzzBench}, most of the preparation was done by incorporating the \textit{gsutil} suite in a Python script that performed web scraping and downloaded content from its Google Cloud bucket, specifically from the location where all experiments results are collected.
 \ \\
 
 All tests were run by providing Docker with unlimited access to the CPU cores and disk space, while RAM was limited to 16GB, to ensure that no input may cause an out-of-memory situation that could result in a complete crash of the testing machines. 
@@ -30,7 +30,7 @@ All tests were run by providing Docker with unlimited access to the CPU cores an
 \newpage
 \section{OSS-Fuzz}
 \subsection{Selecting the projects} \label{selection}
-At the time of writing, the OSS-Fuzz campaign includes over 1000 projects that are actively being fuzzed and tested, but it would obviously be impossible to rebuild and test all of them locally due to the language heterogeneity of such projects and the knowledge and skills required to fix build errors. For this reason, this work focused exclusively on projects written in C/C++, as these languages are widely known to be prone to human error. Then, to further narrow down the analysis, I identified 5 different categories based on the number of sanitizers selected by the developers for testing, keeping ASan as the reference due to its popularity and efficiency. Finally, I ordered each set by "highest number of bugs issued" using the OSS-Fuzz bug tracker, and tested these lists from top to bottom until I had 5 projects for each category that were building and fuzzing correctly.
+At the time of writing, the OSS-Fuzz campaign includes over 1000 projects that are actively being fuzzed and tested, but rebuilding and testing all of them locally would require not only extensive knowledge of many programming languages, but also time and skills to fix potential build errors left by developers' negligence. For this reason, this work focused exclusively on projects written in C/C++, as these languages are widely known to be prone to human error. Then, to further narrow down the analysis, I identified 5 different categories based on the number of sanitizers selected by the developers for testing, keeping ASan as the reference due to its popularity and efficacy. Finally, I ordered each set by "highest number of bugs issued" using the OSS-Fuzz bug tracker and tested these lists from top to bottom until I had 5 projects for each category that were building and fuzzing correctly.
 
 \begin{figure}[h]
 \centering
@@ -39,7 +39,7 @@ At the time of writing, the OSS-Fuzz campaign includes over 1000 projects that a
 \label{fig:project_yaml}
 \end{figure}
 
-The first step in this process was to extract the list of all projects written in C/C++ and divide them according to the sanitizers used, and this was done by performing a preliminary analysis of the \textit{project.yaml} configuration file present inside each project's directory. To retrieve this information, I wrote a simple Python script taking as input the OSS-Fuzz "project" directory, iteratively explored each project's directory looking for the aforementioned configuration file, opened the file (assuming it was found) and scanned each line looking for the "language: c" string and the keywords "address", "memory" and "undefined", eventually saving the name of each project in the appropriate list.
+The first step in this process was to extract the list of all projects written in C/C++ and divide them according to the sanitizers used, and this was done by performing a preliminary analysis of the \textit{project.yaml} configuration file present inside each project's directory. To retrieve this information, I wrote a simple Python script that iteratively explored each project's directory looking for the aforementioned configuration file, opened the file (assuming it was found) and scanned each line looking for the "language: c" string and the keywords "address", "memory" and "undefined", eventually saving the name of each project in the appropriate list.
 \newline \newline
 This yielded a total of 524 projects out of 1277 written using C/C++, with: 
 \begin{itemize}
@@ -50,15 +50,15 @@ This yielded a total of 524 projects out of 1277 written using C/C++, with:
     \item 156 projects not using any sanitizer when fuzzing
 \end{itemize}
 
-The next step was to determine the number of bugs already found for each project, and this required a thorough analysis of the OSS-Fuzz Issue Tracker website \cite{ossfuzz_bugtracker}. At the time of writing, the issue tracker platform has changed from "Monorail" to "Google Sites", so most of the work described here may no longer work as intended.
+The next step was to determine the number of bugs already found for each project, and this required a thorough analysis of the "OSS-Fuzz Issue Tracker" website \cite{ossfuzz_bugtracker}. At the time of writing, the issue tracker platform has changed from "Monorail" to "Google Sites", so most of the work described here may no longer work as intended.
 
 \begin{figure}[h]
-\makebox[\textwidth][c]{\includegraphics[width=0.65\paperwidth]{foto/issue.png}}
+\makebox[\textwidth][c]{\includegraphics[width=0.67\paperwidth]{foto/issue.png}}
 \caption{Example of bug report \cite{ossfuzz_bugtracker}}
 \label{fig:issue}
 \end{figure}
 
-Since the Monorail APIs could only be accessed by the developers of projects already integrated into OSS-Fuzz, and there were no files that could be used for offline analysis, I had to perform web scraping on the individual issues from their web reports. To do this, I used as reference a GitHub repository written by Zhen Yu Ding called "Monorail Scraper" \cite{scraper}, a Python script for scraping and retrieving data from Monorail-based platforms, which also included functionalities for ClusterFuzz-generated OSS-Fuzz issues. The tool relies on Google Chrome and its test development tool called "ChromeDriver" \cite{driver}, an autonomous web server implementing the "W3C WebDriver" \cite{driver_standard}, which in turn provides a remote interface to control user-agents and a set of interfaces to perform analysis and manipulation of DOM elements. Essentially, all these components combined allow the user to write scripts that, in turn, instruct the Google Chrome browser to visit a particular web page, analyze its DOM elements, and possibly perform some interaction with it.
+Since Monorail APIs could only be accessed by the developers of projects already integrated into OSS-Fuzz and there were no files that could be used for offline analysis, I had to perform web scraping on the individual issues from their web reports. To do this, I used as reference a GitHub repository written by Zhen Yu Ding called "Monorail Scraper" \cite{scraper}, a Python script for scraping and retrieving data from Monorail-based platforms, which also included functionalities for ClusterFuzz-generated OSS-Fuzz issues. The tool relies on Google Chrome and its development tool called "ChromeDriver" \cite{driver}, an autonomous web server implementing the "W3C WebDriver" \cite{driver_standard}, which in turn provides a remote interface to control user-agents and a set of interfaces to perform analysis and manipulation of DOM elements. Essentially, all these components combined allow the user to write scripts that, in turn, instruct the Google Chrome browser to visit a particular web page, analyze its DOM elements, and possibly perform some interaction with it.
 
 
 \newpage
@@ -128,7 +128,7 @@ serenity         & NONE                & FuzzJs                                 
 
 \newpage
 \subsection{Testing with OSS-Fuzz} \label{test}
-The OSS-Fuzz repository contains several Python scripts to build and test the available projects as well as debugging and reproducing crashes and bugs. Most of the tools used in this work are provided by the "helper.py" script, which I used to download a project's Docker image, build the fuzzers and download the latest public corpora made available by the developers, using the following commands:
+The OSS-Fuzz repository contains several Python scripts to build and test the available projects, as well as debugging and reproducing crashes and bugs. Most of the tools used in this work are provided by the "helper.py" script, which I used to download a project's Docker image, build the fuzzers and download the latest public corpora made available by the developers, using the following commands:
 \begin{verbatim}
     $ python3 helper.py pull_images 
 
@@ -142,15 +142,16 @@ The OSS-Fuzz repository contains several Python scripts to build and test the av
         --project={project_name} --fuzz-target={binary_name}
 \end{verbatim}
 
-The \verb|pull_images| argument connects to OSS-Fuzz's Google Bucket to download and update all the Docker "base images" on your local machine, which are used by all projects as the base image to create their respective test environments.
+The \verb|pull_images| argument connects to OSS-Fuzz's Google Bucket to download and update all the Docker "base images" on your local machine, which are needed by all projects to create their testing environments.
 The \verb|build_image| argument takes as input the name of a project and builds its Dockerfile, creating a new image on your local machine that will be later used to perform fuzzing. During this process, all dependencies and resources needed to correctly compile the fuzzers are downloaded and installed, including the main \textit{build.sh} script. It was used in conjunction with the previous command and daily \verb|git pull| on the OSS-Fuzz repository, to make sure that I was always building with the latest versions. 
-The \verb|build_fuzzers| argument takes as input the name of a project, a list of possible sanitizers, and a list of possible fuzzing engines to be used during the compilation of the fuzz targets. Although this command accepts only one sanitizer and fuzzing engine at a time, it is possible to mix them by acting on some environment variables provided by the base images. This command acts as a "wrapper" for a much more complex Docker command, that loads the project's Docker image using some specific environment variables and invokes the execution of the \textit{build.sh} script.
+The \verb|build_fuzzers| argument takes as input the name of a project, a list of possible sanitizers, and a list of possible fuzzing engines to be used during the compilation of the fuzz targets. Although this command accepts only one sanitizer and fuzzing engine at a time, it is possible to mix them by acting on some environment variables provided by the base images. This command also acts as a "wrapper" for a much more complex Docker command, that loads the project's Docker image using some specific environment variables and invokes the execution of the \textit{build.sh} script.
 The \verb|download_corpora| argument takes as input a project name and a fuzz target, it then connects to the project's Google Bucket and downloads the latest public corpus for the provided fuzz target.
 
-After executing these commands, three new directories are created: \verb|out| contained the project's directory where all built files were saved, including libraries, fuzz targets and other files created by the selected fuzzer, \verb|work| acted as a temporary location to store intermediate files during the building process and the fuzzing sessions, and \verb|corpus| contained the downloaded corpora stored as a zip file.
+After executing these commands, three new directories are created: \verb|out| contains the project's directory where all built files were saved, including libraries, fuzz targets and other files created by the selected fuzzer, \verb|work| acts as a temporary location to store intermediate files during the building process and the fuzzing sessions, and \verb|corpus| contains the downloaded corpora stored as a zip file.
 
 To prepare the tests, I was tasked with building the chosen fuzz targets using AFL++ (current state-of-the-art fuzzer) and with all possible sanitizers, meaning that each project was compiled 4 times: with ASan only, with MSan only, with UBSan only, and without any sanitizer.
 
+\newpage
 The tests were performed inside each project's Docker image, created and configured using the following command:
 \begin{verbatim}
     $ docker run --rm --privileged 
@@ -160,7 +161,7 @@ The tests were performed inside each project's Docker image, created and configu
         -v /home/zio-saba/Scrivania/TESI/logfiles/:/logfiles/ 
         -it  gcr.io/oss-fuzz/{project_name} /bin/bash
 \end{verbatim}
-The first parameters are needed to create a privileged instance of Docker, specify the running platform on which the fuzz targets will be tested and limit memory inside the container. The arguments starting with \verb|-v| are used to create a shared directory, i.e. linking a local directory to a virtual one created inside the container: this was necessary to make sure that I could access the resources stored locally on my machine (i.e. fuzz targets, libraries and their corpus) from inside the Docker container. The last line invokes the project image to load as well as making it interactive by spawning a \verb|/bin/bash| process.
+The first parameters are needed to create a privileged instance of Docker, specify the running platform on which the fuzz targets will be tested and limit memory usage inside the container. The arguments starting with \verb|-v| are used to create a shared directory, i.e. linking a local directory to a virtual one created inside the container: this was necessary to make sure that I could access the resources stored locally on my machine (i.e. fuzz targets, libraries and their corpus) from inside the Docker container. The last line invokes the project image to load as well as making it interactive by spawning a \verb|/bin/bash| process.
 \ \\
 
 Once the Docker image has been loaded and ready to use, some final adjustments were performed to perform the tests, here we mention a few of them:
@@ -174,7 +175,7 @@ $ cp -R /usr/msan/include/* /usr/local/include
 \begin{verbatim}
 $ sudo apt install gdb valgrind
 \end{verbatim} 
-    \item when modifying the source files, the \verb|compile| command can be used to start the build process for the fuzz targets without leaving the Docker image
+    \item when modifying the source files for compile errors, the \verb|compile| command was used to start the build process for the fuzz targets without leaving the Docker image
     \item sometimes, the \verb|apt| tool was not available in a specific Docker container, because all base images provided by OSS-Fuzz contain a minimal installation with only some key packages that are usually enough to compile programs, such as compiler, assembler, text editors and standard libraries: in such cases, the \verb|unminimize| command was executed, which essentially "unpacks" the container and reverts it to a standard Ubuntu image, reinstalling all the default packages as well as standard additional tools
 \end{itemize}
 
@@ -217,10 +218,11 @@ Similarly to before, the shell \verb|for| construct scans all files found in the
 
 
 \newpage
-However, not all projects built on their first attempt.
+However, not all projects successfully built on their first attempt.
 In most cases, the building process failed due to missing libraries: for example, libraries like \verb|pthread| and \verb|math| were often automatically added by the sanitizers. Other times, libraries were not being correctly linked and/or were missing crucial compiling flags, like \verb|-ldl| and \verb|-lz|. To fix these problems, I had to manually modify the source files and compile the fuzz targets from inside the Docker container, using the following command:
 \begin{verbatim}
-    $ docker run --rm --privileged --platform linux/amd64 
+    $ docker run --rm --privileged 
+        --platform linux/amd64 --memory=16g
         -e PROJECT_NAME={project_name} -e HELPER=True 
         -e FUZZING_LANGUAGE=c++ 
         -e FUZZING_ENGINE=afl 
@@ -229,7 +231,7 @@ In most cases, the building process failed due to missing libraries: for example
         -v /oss-fuzz/build/work/{project_name}/:/work/
         -it  gcr.io/oss-fuzz/{project_name} /bin/bash
 \end{verbatim}
-Similarly to before, the first parameters are needed to create a privileged instance of Docker and specify the running platform on which the fuzz targets will be tested, the arguments starting with \verb|-v| are used to create a shared directory in the Docker container and the last line invokes the project image to load as well as making it interactive by spawning a \verb|/bin/bash| process.
+Similarly to before, the first parameters are needed to create a privileged instance of Docker, specify the running platform on which the fuzz targets will be tested and limit memory usage, the arguments starting with \verb|-v| are used to create a shared directory in the Docker container and the last line invokes the project image to load as well as making it interactive by spawning a \verb|/bin/bash| process.
 The novelty lies in the arguments starting with \verb|-e|, which can be used to override the environment variables provided by the Docker image: these variables can be used by the source files to compile a program using the most appropriate compile flags, fuzzing engine and sanitizers, and they can be easily modified by the user when creating the Docker image to easily re-target the compilation with little to none effort. 
 
 
@@ -247,7 +249,7 @@ The novelty lies in the arguments starting with \verb|-e|, which can be used to 
 \newpage
 \section{FuzzBench}
 \subsection{Selecting the projects}
-As previously mentioned, the FuzzBench campaign started in 2020, performing tests almost daily for the past 4 years while providing valuable information to both fuzzers developers and the developers of the selected projects that have been integrated as benchmarks.
+The FuzzBench campaign started in 2020 and has been performing tests almost daily for the past 4 years, providing valuable information to both fuzzers developers and the developers of the selected projects that have been integrated as benchmarks.
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.4]{foto/tree.png}
@@ -271,7 +273,7 @@ Following the experiments, each project has its own folder that specifies the na
 \end{itemize}
 
 
-The objective of this analysis was to build the latest version of several experiments, download all the available \verb|crashes| for each one of them and verify whether they have been fixed or not. However, preliminary analysis yielded over 100 million possible zip files to download and test, which would require several months of work by itself. 
+The objective of this analysis was to build the latest version of several experiments, download all the available \verb|crashes| for each one of them and verify whether they have been fixed or not. However, a preliminary analysis yielded over 100 million possible zip files to download and test, which would require several months of work by itself. 
 As previously mentioned, FuzzBench provides coverage-oriented or bug-oriented fuzzing, therefore I focused on bug-oriented experiments for the analysis. To do this, I found the \textit{experiment-requests.yaml} configuration file \cite{exp_yaml} inside the FuzzBench repository, which contained all information related to the type of tests conducted, the projects tested as well as all the fuzzing engines used:
 
 \begin{figure}[h]
@@ -362,13 +364,13 @@ Initially, I used the "helper.py" script to download the latest Docker image for
         -v /home/zio-saba/Scrivania/TESI/logfiles/:/logfiles/  
         -it  gcr.io/oss-fuzz/{project_name} /bin/bash
 \end{verbatim}
-As previously shown, the first parameters are needed to create a privileged instance of Docker, specify the running platform on which the fuzz targets will be tested and limit the container memory usage, the arguments starting with \verb|-e| override the environment variables provided by the Docker image, the ones starting with \verb|-v| are used to create shared directories and the last line invokes the project image to load as well as making it interactive by spawning a \verb|/bin/bash| process.
+As previously shown, the first parameters are needed to create a privileged instance of Docker, specify the running platform on which the fuzz targets will be tested and limit memory usage, the arguments starting with \verb|-e| override the environment variables provided by the Docker image, the ones starting with \verb|-v| are used to create shared directories and the last line invokes the project image to load as well as making it interactive by spawning a \verb|/bin/bash| process.
 Given that the container accepts only one sanitizer at a time, I had to specify both ASan and UBSan flags in the same variable storing the ASan sanitizer flags, using as reference the subset of UBSan flags used by default by FuzzBench \cite{flags}.
 
 \newpage
 All crashes collected during the initial analysis were then categorized as follows:
 \begin{itemize}
-    \item \textbf{crash:} inputs leading to any scenario that forces the system to close the process, like SEGV and heap/stack buffer overflows
+    \item \textbf{crash:} inputs leading to any scenario that forces the system to close the process, like SEGV and buffer overflows
     \item \textbf{out-of-memory (oom):} inputs inducing memory leaks or using huge allocation sizes to purposely test fail-safe mechanisms
     \item \textbf{timeout:} inputs that are either very long to parse or that purposely introduce unnecessary operations, again to test the resiliency of the program 
 \end{itemize}
@@ -390,15 +392,15 @@ As before, the shell \verb|for| construct scans all files found in the "corpus" 
 
 \newpage
 \section{Bug deduplication} \label{bug_dedup}
-To correctly analyze and categorize the bugs discovered, it is necessary to perform \textit{bug deduplication}, a technique used to remove all inputs that produced the same results, which is crucial to remove unnecessary data from the results and make the bug analysis work less tedious for the developer. There are several strategies that can be applied to deduplicate bugs, but it is important to mention that there is no fool-proof methodology that produces perfect results on all possible scenarios, and this is because which information you are using as reference and their number will (almost always) lead to partial loss of data.
+To correctly analyze and categorize the bugs discovered, it is necessary to perform \textit{bug deduplication}, a technique used to identify all inputs that produced the same output, which is crucial to remove unnecessary data from the results and make the bug analysis work less tedious for the developer. There are several strategies that can be applied to deduplicate bugs, but it is important to mention that there is no fool-proof methodology that produces perfect results on all possible scenarios, and this is because which information you are using as reference and their number will (almost always) lead to partial loss of data.
 
 We provide an overview of the most popular bug deduplication techniques \cite{dedup_survey}.
-The most common technique is "stack trace analysis", i.e. analyzing input ID, function call records (also called \textit{frames}) and error type: this is because when a program crashes, several debug and error information are collected from the runtime stack, and their analysis has proven to be particularly effective in identifying the uniqueness of a bug.
-Another approach is based on "code coverage information analysis": in the context of fuzzing, the fuzzing tool maintains several bitmaps to store the execution path of each testcase, so that when a bug is encountered, it is considered unique only if the testcase follows a previously unseen execution path or if it matches an already known flow but with a different execution order.
-Finally, "context comparison" may be used to differentiate between different execution scenarios: most common methodologies are taint analysis, which involves analyzing how data flows and is manipulated by the program during its execution, and symbolic execution, which performs a static analysis of the code to simulate all possible execution scenarios. However, this last approach is often discarded, as it requires enormous amounts of time, data and knowledge to produce meaningful results.
+The most common technique is \textit{stack trace analysis}, i.e. analyzing input ID, function call records (also called \textit{frames}) and error type: this is because when a program crashes, several debug and error information are collected from the runtime stack, and their analysis has proven to be particularly effective in identifying the uniqueness of a bug.
+Another approach is based on \textit{code coverage information analysis}: in the context of fuzzing, the fuzzing tool maintains several bitmaps to store the execution path of each testcase, so that when a bug is encountered, it is considered unique only if the testcase follows a previously unseen execution path or if it matches an already known flow but with a different execution order.
+Finally, \textit{context comparison} may be used to differentiate between different execution scenarios: most common methodologies are taint analysis, which involves analyzing how data flows and is manipulated by the program during its execution, and symbolic execution, which performs a static analysis of the code to simulate all possible execution scenarios. However, this last approach is often discarded, as it requires enormous amounts of time, data and knowledge to produce meaningful results.
 \newline
 
-Since this work focused primarily on frameworks based on ClusterFuzz as the back-end, I decided to employ the same "stack trace analysis" approach used by ClusterFuzz when generating bug reports, where the fields "Crash Type" and "Crash state" are the main references (see Figure \ref{fig:issue}):
+Since this work focused primarily on frameworks based on ClusterFuzz as the back-end, I decided to employ the same \textit{stack trace analysis} approach used by ClusterFuzz when generating bug reports, where the fields "Crash Type" and "Crash state" are the main references (see Figure \ref{fig:issue}):
 \begin{itemize}
     \item address bugs were deduplicated using as reference the last 3 stack entries and the error type
     \item undefined behavior bugs were deduplicated using as reference the error type, the address where the error occurred and the causing instruction
