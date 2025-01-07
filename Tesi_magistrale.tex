@@ -39,12 +39,14 @@
 \usepackage{xspace}
 \newcommand{\mytext}[2]{\textcolor{#1}{#2}}
 
-\newcommand{\tofix}[1]{\mytext{red}{#1}}
+%Note: I am disabling these commands, so if we left any (which at this point would mean that we forgot to address some comment), it will raise an error
 
-\newcommand{\mynote}[2]{\xspace\fbox{\bfseries\sffamily\scriptsize{#1}}
-	{\small$\blacktriangleright$\textsf{\scriptsize\emph{#2}}$\blacktriangleleft$}}
-\newcommand{\matteo}[1]{\mytext{magenta}{\mynote{MM}{#1}}}
-\newcommand{\ziosaba}[1]{\mytext{cyan}{\mynote{ZS}{#1}}}
+% \newcommand{\tofix}[1]{\mytext{red}{#1}}
+
+% \newcommand{\mynote}[2]{\xspace\fbox{\bfseries\sffamily\scriptsize{#1}}
+% 	{\small$\blacktriangleright$\textsf{\scriptsize\emph{#2}}$\blacktriangleleft$}}
+% \newcommand{\matteo}[1]{\mytext{magenta}{\mynote{MM}{#1}}}
+% \newcommand{\ziosaba}[1]{\mytext{cyan}{\mynote{ZS}{#1}}}
 
 
 \title{The Bugs We Left Behind: Evaluating Autonomous Fuzzing Infrastructures for Overlooked Bugs and Vulnerabilities}
