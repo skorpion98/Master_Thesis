@@ -3,10 +3,11 @@
 
 All collected bugs were appropriately deduplicated: to do this, I used several Python scripts (one for each sanitizer and one for Valgrind) that analyzed the logs generated during each fuzzing session, performing deduplication according to their respective methodology described in \ref{bug_dedup}.
 
-Then, \textit{bug triage} was performed, analyzing more in-depth where the bug occurred, why it happened and assigning a priority in the range "Low", "Medium" and "High". This required a manual investigation of each bug individually, statically and dynamically, to have a clearer understanding of the problem and potentially provide suggestions to the developers regarding the fix.
+Then, \textit{bug triage} was performed, analyzing more in-depth where the bug occurred, what happened and why: this required a manual investigation of each bug individually, statically and dynamically, to have a clearer understanding of the problem and potentially provide suggestions to the developers regarding the fix.
 This step was also important to refine the previous deduplication step, as two inputs that triggered (apparently) different bugs may only have distinct stack flows: if the bug originated from the same function, it meant that two different execution flows triggered the same error. In this case, a common practice is to fix one of them and then use the other input as an additional check for correctness.
 
 Finally, all recorded bugs for a project, along with their log and fuzz targets, were reported to their respective developers according to their preferred communication method: almost all reports were sent using GitHub's integrated issue tracker, some required a subscription to a proprietary issue tracking platform, and a few of them were sent via emails.
+When available, an estimated priority was assigned to the overall content of the report, usually with the values "Low", "Medium" and "High".
 \newline
 
 At the moment of writing, unfortunately, not all developers answered and/or acknowledged the reported bugs.
