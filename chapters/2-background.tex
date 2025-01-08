@@ -182,7 +182,7 @@ Fixing these bugs generally requires little to no effort, but many developers av
 \subsection{UBSan}
 The \textit{Undefined Behavior Sanitizer} \cite{ubsan_docs} is a fast undefined-behavior detector for C/C++ that helps developers to find and fix undefined-behavior (UB) bugs. The C language specification allows developers to perform many complex and (sometimes) unreasonable operations on the assumption that they know what they are doing, and this leads to the compiler making arbitrary decisions when the code does not conform to some expected values: for example, an array indexed with an out-of-bound value will not always crash the program if said memory location contains valid content that belongs to the program, while performing a conversion between two data types of different sizes will result in unpredictable loss of data due to rounding operations. This means that different compilers will handle such situations differently and produce unexpected results each time they are executed, all without taking into account that the hardware used and the level of optimization chosen will also affect these results.
 
-Common operations that may lead to undefined behaviors are: array subscription out of bounds, overflows/underflows of numerical types due to mathematical or logical operations, shifts of numerical values, dereferenced, misaligned or null pointers, and invalid conversions between data types. Although this list is not exhaustive of all possible scenarios, it is apparent that most of the problems mentioned could be fixed with negligible effort and avoided altogether by applying appropriate coding standards.  
+Common operations that may lead to undefined behaviors are the following: array subscription out of bounds, overflows/underflows of numerical types due to mathematical or logical operations, shifts of numerical values, dereferenced, misaligned or null pointers, and invalid conversions between data types. Although this list is not exhaustive of all possible scenarios, it is apparent that most of the problems mentioned could be fixed with negligible effort and avoided altogether by applying appropriate coding standards.  
 
 This sanitizer works similarly and sometimes overlaps with ASan, putting protected regions around buffers and inserting correctness-checking functions after all mathematical, logical, and implicit/explicit cast operations. By default, due to its simplistic nature, the tool does not print stack-traces and uses a minimal run-time library, although the "print-stacktrace-mode" option can be enabled to obtain more comprehensive results.
 
@@ -287,13 +287,13 @@ Finally, any bug discovered is reported to the OSS-Fuzz issue tracker \cite{ossf
 
 
 \newpage
-To be accepted by OSS-Fuzz, a project must be relevant and/or critical to the global IT infrastructure and it must have a significant user base: to check if your project is eligible, Google provides a mathematical formula to calculate its "Open-Source Project Criticality Score" \cite{score} in a range between 0 \textit{(least critical)} and 1 \textit{(most critical)}, where $\alpha_i$ refers to the "weight" of an indicator and $T_i$ to its maximum allowed value:
-
+To be accepted by OSS-Fuzz, a project must be relevant and/or critical to the global IT infrastructure and it must have a significant user base. To check if your project is eligible, Google provides a mathematical formula to calculate its "Open-Source Project Criticality Score" \cite{score} in a range between 0 \textit{(least critical)} and 1 \textit{(most critical)}:
+\newline
 \begin{equation}
     CriticalityScore = \frac{1}{\sum \alpha_i}\  \sum_i \alpha_i \ \frac{\log(1+S_i)}{\log(1+\max(S_i,T_i))}
 \end{equation}
 \ \\
-The parameters evaluated are the following:
+The evaluated parameters $S_i$ are described below, while $\alpha_i$ refers to their "weight" and $T_i$ to their maximum allowed value:
 \begin{itemize}
     \item \textbf{created-since} ($\alpha_i = 1$, $T_i = 120$): months since the project was created, older projects have a higher chance of being widely used or dependent on
     \item \textbf{updated-since} ($\alpha_i = -1$, $T_i = 120$): months since the project's last update, unmaintained projects with no recent commits have a higher chance of being less relied upon
@@ -314,7 +314,7 @@ Only projects scoring a value $\geq 0.7$ may be eligible to be integrated in the
 Assuming a project satisfies the score requirements, developers create the 3 following files and issue a "pull request" on the OSS-Fuzz repository, which are periodically checked and validated by bots before accepting/rejecting them.
 
 \paragraph{project.yaml} Configuration file that contains metadata regarding who owns the project, how to contact them when filing bug reports, and configuration parameters about the fuzzing sessions, needed by OSS-Fuzz to correctly provide its services.
-Some of the most common information reported are:
+Follows a list some of the most common information reported:
 \begin{itemize}
     \item \textbf{homepage:} URL to the project homepage
     \item \textbf{language:} programming language used to write the project (C, C++, Go, Rust, Python, JVM languages, Swift)
