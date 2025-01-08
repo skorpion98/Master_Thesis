@@ -87,8 +87,8 @@ It is interesting to note that these bugs were already reported by ClusterFuzz w
 The remaining 25 memory bugs were all related to use-of-uninitialized-memory (UUM) and memory-bound errors. More specifically, they can be divided into three categories according to Valgrind:
 \begin{itemize}
     \item \textit{conditional jump or move depends on uninitialized value}: happens when an \verb|if| statement is based on a variable whose value is uninitialized
-    \item \textit{use of uninitialized value in function [...]}: happens when one (or more) of the parameters passed to an invoked function are uninitialized
-    \item \textit{invalid read of size [...]}: happens when a read/write operation performed overruns the provided buffer, as the content outside of a buffer could be anything
+    \item \textit{use of uninitialized value in function F}: happens when one (or more) of the parameters passed to  function \textit{F} are uninitialized
+    \item \textit{invalid read of size N}: happens when a read/write operation performed overruns the provided buffer of \textit{N} bytes, as the content outside of a buffer could be anything
 \end{itemize}
 
 After reporting the UUM bugs and having the pleasure of interacting with the CEO of GPAC itself, we were happy to discover all bugs fixed in just a few days. The developers created a public commit \cite{gpac_commit} to explain the issues discovered and reassure everyone that they did not pose a security concern, as they believe the path to exploitation is difficult. However, they agreed on the fact that such bugs could be resolved by trivial and obvious corrections, and the existence of such issues shows that they need to be more vigilant: most of the problems mentioned above originated from local structures declared but left uninitialized, buffer-related operations with no checks regarding the size of the data passed to the buffer, and recalling that most read/write functions return the number of bytes actually read/written.
